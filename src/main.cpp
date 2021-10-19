@@ -3,6 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <stdint.h>
+#include <bits/stdc++.h>
 #include <arm_neon.h>
 #include <math.h>
 
@@ -14,6 +15,10 @@ using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::chrono::milliseconds;
 
+//TODO: Calculate how many number of iterations are needed
+//TODO: Get array of 8*8 or similar number sets and multiply accumulate, deduct from the result
+//TODO: In the case where a number set is not completly filled. we need to verify if the remaining positions are 0 so they won't affect the results
+
 /**
     Perform Int cholesky decomposition and return result
 **/
@@ -23,19 +28,18 @@ int **cholesky(int **L, int n)
 
     for (j = 0; j < n; j++)
     {
+        // Replace with 0
+        memset(&L[j][j + 1], 0, sizeof(int) * (n - j - 1));
+        i = j;
 
-        for (i = 0; i < j; i++)
-        {
-            L[i][j] = 0;
-        }
-
+        // Diagnal
         for (k = 0; k < i; k++)
         {
             L[j][j] = L[j][j] - L[j][k] * L[j][k];
         }
-
         L[i][i] = sqrt(L[j][j]);
 
+        // Calculate left
         for (i = j + 1; i < n; i++)
         {
             for (k = 0; k < j; k++)
