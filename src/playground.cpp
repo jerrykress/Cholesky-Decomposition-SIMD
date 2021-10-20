@@ -4,6 +4,7 @@
 #include <chrono>
 #include <stdint.h>
 #include <bits/stdc++.h>
+#include <arm_neon.h>
 #include <math.h>
 
 #define MAX 100
@@ -114,6 +115,40 @@ int main()
     /* Getting number of milliseconds as a double */
     duration<double, std::milli> ms_double = t2 - t1;
     std::cout << ms_double.count() << " ms" << endl;
+
+    /* more tests */
+    uint8x16_t neonArr1 = {0, 0, 0, 0,
+                           0, 0, 0, 0,
+                           0, 0, 0, 0,
+                           0, 0, 0, 0};
+
+    uint8x16_t neonArr2 = {0, 0, 0, 0,
+                           0, 0, 0, 0,
+                           0, 0, 0, 0,
+                           0, 0, 0, 0};
+
+    uint8_t *arr1 = new uint8_t[12];
+    arr1[1] = 1;
+    arr1[2] = 2;
+
+    uint8_t *arr2 = new uint8_t[12];
+    arr2[1] = 3;
+    arr2[2] = 4;
+
+    neonArr1 = vld1q_u8(arr1);
+    neonArr2 = vld1q_u8(arr2);
+    neonArr2 = vmulq_u8(neonArr1, neonArr2);
+
+    // vst1q_u8(arr, neonArr2);
+    uint8_t sum = vaddvq_u8(neonArr2);
+
+    // for (int i = 0; i < 16; i++)
+    // {
+    //     cout << unsigned(arr[i]) << ", " << endl;
+    // }
+
+    cout << endl
+         << "Sum: " << unsigned(sum) << endl;
 
     return 0;
 }

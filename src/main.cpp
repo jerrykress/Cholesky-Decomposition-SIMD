@@ -25,6 +25,7 @@ using std::chrono::milliseconds;
 int **cholesky(int **L, int n)
 {
     int i, j, k;
+    int num8x16 = ceil(n / 16);
 
     for (j = 0; j < n; j++)
     {

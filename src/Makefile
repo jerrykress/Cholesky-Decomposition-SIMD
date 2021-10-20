@@ -13,6 +13,14 @@ run:
 	@echo "Running compiled binary..."
 	chmod +x ${OUTPUT} && ./${OUTPUT}
 
+playground:
+	@echo "Compiling playground program..."
+	${CC} playground.cpp -o playground.elf
+
+play:
+	@echo "Running playground binary..."
+	chmod +x playground.elf && ./playground.elf
+
 clean:
 	@echo "Cleaning built binaries..."
 	rm ${OUTPUT}
