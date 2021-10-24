@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <assert.h>
 #include <iostream>
+#include <iomanip>
 #include <chrono>
 #include <stdint.h>
 #include <bits/stdc++.h>
 #include <arm_neon.h>
 #include <math.h>
+#include <fstream>
+#include <string>
+#include <stdexcept>
+#include <sstream>
 
 #define MAX 100
 
@@ -19,10 +24,15 @@ using std::chrono::milliseconds;
 //TODO: Get array of 8*8 or similar number sets and multiply accumulate, deduct from the result
 //TODO: In the case where a number set is not completly filled. we need to verify if the remaining positions are 0 so they won't affect the results
 
+// Global Variables
+vector<vector<double>> matrixVec;
+double **matrix;
+int dim;
+
 /**
     Perform Int cholesky decomposition and return result
 **/
-int **cholesky(int **L, int n)
+double **cholesky(double **L, int n)
 {
     int i, j, k;
     int num8x16 = ceil(n / 16);
@@ -30,7 +40,7 @@ int **cholesky(int **L, int n)
     for (j = 0; j < n; j++)
     {
         // Replace with 0
-        memset(&L[j][j + 1], 0, sizeof(int) * (n - j - 1));
+        memset(&L[j][j + 1], 0, sizeof(double) * (n - j - 1));
         i = j;
 
         // Diagnal
@@ -57,7 +67,7 @@ int **cholesky(int **L, int n)
 /**
     Print a matrix
 **/
-void printMatrix(int **L, int n, string text = "Print Matrix")
+void printMatrix(double **L, int n, string text = "Print Matrix")
 {
     cout << text << endl;
     cout << "=================" << endl;
@@ -65,7 +75,8 @@ void printMatrix(int **L, int n, string text = "Print Matrix")
     {
         for (int j = 0; j < n; j++)
         {
-            cout << L[i][j] << " ";
+            cout << setprecision(2) << L[i][j] << " ";
+            // printf("%f\n", L[i][j]);
         }
         cout << endl;
     }
@@ -73,44 +84,96 @@ void printMatrix(int **L, int n, string text = "Print Matrix")
 }
 
 /**
-    Initialise the matrix from array
+    Initialise the matrix 2d array from vector
 **/
-template <size_t N, size_t M>
-int **initMatrix(int **matrix, int (&raw)[N][M], int n)
+double **initMatrix(double **destination, vector<vector<double>> origin, int n)
 {
-    matrix = new int *[n];
+    destination = new double *[n];
 
     for (int i = 0; i < n; i++)
     {
-        matrix[i] = new int[n];
+        destination[i] = new double[n];
         for (int j = 0; j < n; j++)
         {
-            matrix[i][j] = raw[i][j];
-            // cout << "Init Pos[" << i << "][" << j << "]: " << matrix[i][j] << endl;
+            destination[i][j] = origin[i][j];
+            cout << "[INIT]" << destination[i][j] << endl;
         }
     }
-    return matrix;
+    return destination;
 }
 
-int main()
+void readMatrix(string filename, vector<vector<double>> &destination, char delim = ' ')
 {
-    int **matrix;
+    // if destination vector not empty, abort
+    if (!destination.empty())
+    {
+        cout << "Destination matrix not empty. Abort..." << endl;
+        return;
+    }
 
-    int raw[][MAX] = {{4, 12, -16},
-                      {12, 37, -43},
-                      {-16, -43, 98}};
+    // setup stream and line buffer
+    ifstream file(filename);
+    string line;
 
-    /* Finding the size of the matrix */
-    int n = sizeof(raw) / sizeof(raw[0]);
+    // read file line by line
+    while (getline(file, line))
+    {
+        // prepare line buffer
+        vector<double> v;
+        stringstream ss(line);
+
+        // parse line using delimiter
+        while (ss.good())
+        {
+            string substr;
+            getline(ss, substr, delim);
+            v.push_back(stod(substr));
+        }
+
+        // add line to destination matrix
+        destination.push_back(v);
+    }
+}
+
+/**
+ * Check if a matrix is square and valid
+**/
+bool validMatrix(vector<vector<double>> &m)
+{
+    int len = m.size();
+
+    for (int i = 0; i < len; i++)
+    {
+        if (m[i].size() != len)
+        {
+            cout << "Error! Matrix shape incorrect." << endl;
+            return false;
+        }
+    }
+
+    dim = len;
+    return true;
+}
+
+int main(int argc, char **argv)
+{
+    // string filename = argv[0];
+    string filename = "input_16x16.txt";
+    readMatrix(filename, matrixVec);
 
     /* Initialise */
-    matrix = initMatrix(matrix, raw, n);
+    if (validMatrix(matrixVec))
+    {
+        matrix = initMatrix(matrix, matrixVec, dim);
+    }
+
+    cout << "[INFO] DIM=" << dim << endl;
 
     /* Performing a timed task */
     auto t1 = high_resolution_clock::now();
-    printMatrix(matrix, n, "Original Matrix");
-    matrix = cholesky(matrix, n);
-    printMatrix(matrix, n, "Decomposed Matrix");
+    printMatrix(matrix, dim, "Original Matrix");
+    matrix = cholesky(matrix, dim);
+    printMatrix(matrix, dim, "Decomposed Matrix");
     auto t2 = high_resolution_clock::now();
 
     /* Getting number of milliseconds as a double */
