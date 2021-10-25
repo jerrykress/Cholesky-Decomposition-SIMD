@@ -14,7 +14,7 @@ if type(dim) != type(1) or dim < 3:
     sys.exit()
 
 # create matrix
-A = np.random.rand(dim, dim)
+A = np.random.randint(50, size=(dim, dim))
 B = np.dot(A, A.transpose())
 
 # get filename

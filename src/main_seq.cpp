@@ -38,10 +38,12 @@ T **cholesky(T **L, int n)
         i = j;
 
         // Diagnal
+
         for (k = 0; k < i; k++)
         {
-            L[j][j] = L[j][j] - L[j][k] * L[j][k];
+            L[j][j] -= L[j][k] * L[j][k];
         }
+
         L[i][i] = sqrt(L[j][j]);
 
         // Calculate left
