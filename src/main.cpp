@@ -26,15 +26,15 @@ int dim;
 /**
     Perform Int cholesky decomposition and return result
 **/
-float **cholesky(float **L, int n)
+template <class T>
+T **cholesky(T **L, int n)
 {
     int i, j, k;
-    int num64x2 = ceil(n / 4);
 
     for (j = 0; j < n; j++)
     {
         // Replace with 0
-        memset(&L[j][j + 1], 0, sizeof(float) * (n - j - 1));
+        memset(&L[j][j + 1], 0, sizeof(T) * (n - j - 1));
         i = j;
 
         // Diagnal
@@ -120,7 +120,8 @@ void readMatrix(string filename, vector<vector<float>> &destination, char delim 
         {
             string substr;
             getline(ss, substr, delim);
-            v.push_back(stod(substr));
+            cout << "[READ] " << substr << endl;
+            v.push_back(stof(substr));
         }
 
         // add line to destination matrix
@@ -150,8 +151,7 @@ bool validMatrix(vector<vector<float>> &m)
 
 int main(int argc, char **argv)
 {
-    // string filename = argv[0];
-    string filename = "input_16x16.txt";
+    string filename = argv[1];
     readMatrix(filename, matrixVec);
 
     /* Initialise */
@@ -163,11 +163,13 @@ int main(int argc, char **argv)
     cout << "[INFO] DIM=" << dim << endl;
 
     /* Performing a timed task */
-    auto t1 = high_resolution_clock::now();
     printMatrix(matrix, dim, "Original Matrix");
-    matrix = cholesky(matrix, dim);
-    printMatrix(matrix, dim, "Decomposed Matrix");
+
+    auto t1 = high_resolution_clock::now();
+    matrix = cholesky<float>(matrix, dim);
     auto t2 = high_resolution_clock::now();
+
+    printMatrix(matrix, dim, "Decomposed Matrix");
 
     /* Getting number of milliseconds as a double */
     duration<double, std::milli> ms_double = t2 - t1;
