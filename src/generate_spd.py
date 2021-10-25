@@ -1,4 +1,5 @@
 # A simple script that generate symmetrical positive definite matrix given the size
+# usage: python3 generate_spd.py <size>
 
 import numpy as np
 import sys

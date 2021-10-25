@@ -14,14 +14,7 @@ run:
 	@echo "Running compiled binary..."
 	chmod +x ${OUTPUT} && ./${OUTPUT} ${TEST_FILE}
 
-playground:
-	@echo "Compiling playground program..."
-	${CC} playground.cpp -o playground.elf
-
-play:
-	@echo "Running playground binary..."
-	chmod +x playground.elf && ./playground.elf
-
 clean:
-	@echo "Cleaning built binaries..."
+	@echo "Cleaning built binaries and generated input files..."
 	rm ${OUTPUT}
+	rm *.txt

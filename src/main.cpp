@@ -173,7 +173,8 @@ int main(int argc, char **argv)
 
     /* Getting number of milliseconds as a double */
     duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << ms_double.count() << " ms" << endl;
+    std::cout << "[RESULT] " << ms_double.count() << " ms\n"
+              << endl;
 
     return 0;
 }
