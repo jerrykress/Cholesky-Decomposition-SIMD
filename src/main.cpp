@@ -63,7 +63,7 @@ T **cholesky(T **L, int n)
 **/
 void printMatrix(float **L, int n, string text = "Print Matrix")
 {
-    cout << text << endl;
+    cout << "[PRINT] " << text << endl;
     cout << "=================" << endl;
     for (int i = 0; i < n; i++)
     {
