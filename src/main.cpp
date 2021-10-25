@@ -12,35 +12,29 @@
 #include <stdexcept>
 #include <sstream>
 
-#define MAX 100
-
 using namespace std;
 using std::chrono::duration;
 using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::chrono::milliseconds;
 
-//TODO: Calculate how many number of iterations are needed
-//TODO: Get array of 8*8 or similar number sets and multiply accumulate, deduct from the result
-//TODO: In the case where a number set is not completly filled. we need to verify if the remaining positions are 0 so they won't affect the results
-
 // Global Variables
-vector<vector<double>> matrixVec;
-double **matrix;
+vector<vector<float>> matrixVec;
+float **matrix;
 int dim;
 
 /**
     Perform Int cholesky decomposition and return result
 **/
-double **cholesky(double **L, int n)
+float **cholesky(float **L, int n)
 {
     int i, j, k;
-    int num8x16 = ceil(n / 16);
+    int num64x2 = ceil(n / 4);
 
     for (j = 0; j < n; j++)
     {
         // Replace with 0
-        memset(&L[j][j + 1], 0, sizeof(double) * (n - j - 1));
+        memset(&L[j][j + 1], 0, sizeof(float) * (n - j - 1));
         i = j;
 
         // Diagnal
@@ -67,7 +61,7 @@ double **cholesky(double **L, int n)
 /**
     Print a matrix
 **/
-void printMatrix(double **L, int n, string text = "Print Matrix")
+void printMatrix(float **L, int n, string text = "Print Matrix")
 {
     cout << text << endl;
     cout << "=================" << endl;
@@ -76,7 +70,6 @@ void printMatrix(double **L, int n, string text = "Print Matrix")
         for (int j = 0; j < n; j++)
         {
             cout << setprecision(2) << L[i][j] << " ";
-            // printf("%f\n", L[i][j]);
         }
         cout << endl;
     }
@@ -86,13 +79,13 @@ void printMatrix(double **L, int n, string text = "Print Matrix")
 /**
     Initialise the matrix 2d array from vector
 **/
-double **initMatrix(double **destination, vector<vector<double>> origin, int n)
+float **initMatrix(float **destination, vector<vector<float>> &origin, int n)
 {
-    destination = new double *[n];
+    destination = new float *[n];
 
     for (int i = 0; i < n; i++)
     {
-        destination[i] = new double[n];
+        destination[i] = new float[n];
         for (int j = 0; j < n; j++)
         {
             destination[i][j] = origin[i][j];
@@ -102,7 +95,7 @@ double **initMatrix(double **destination, vector<vector<double>> origin, int n)
     return destination;
 }
 
-void readMatrix(string filename, vector<vector<double>> &destination, char delim = ' ')
+void readMatrix(string filename, vector<vector<float>> &destination, char delim = ' ')
 {
     // if destination vector not empty, abort
     if (!destination.empty())
@@ -119,7 +112,7 @@ void readMatrix(string filename, vector<vector<double>> &destination, char delim
     while (getline(file, line))
     {
         // prepare line buffer
-        vector<double> v;
+        vector<float> v;
         stringstream ss(line);
 
         // parse line using delimiter
@@ -138,7 +131,7 @@ void readMatrix(string filename, vector<vector<double>> &destination, char delim
 /**
  * Check if a matrix is square and valid
 **/
-bool validMatrix(vector<vector<double>> &m)
+bool validMatrix(vector<vector<float>> &m)
 {
     int len = m.size();
 
