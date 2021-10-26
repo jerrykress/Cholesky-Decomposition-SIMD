@@ -5,8 +5,8 @@ CC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-
 PROG_SEQ  = main_seq
 PROG_SIMD = main_neon
 
-RUN_PROG = ${PROG_SIMD}
-TEST_FILE = input_8x8.txt
+RUN_PROG = ${PROG_SEQ}
+TEST_FILE = input_128x128.txt
 
 compile:
 	@echo "Compiling to aarch64..."
