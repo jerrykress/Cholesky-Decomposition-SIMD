@@ -91,7 +91,7 @@ float **initMatrix(float **destination, vector<vector<float>> &origin, int n)
         for (int j = 0; j < n; j++)
         {
             destination[i][j] = origin[i][j];
-            cout << "[INIT]" << destination[i][j] << endl;
+            // cout << "[INIT]" << destination[i][j] << endl;
         }
     }
     return destination;
@@ -122,7 +122,7 @@ void readMatrix(string filename, vector<vector<float>> &destination, char delim 
         {
             string substr;
             getline(ss, substr, delim);
-            cout << "[READ] " << substr << endl;
+            // cout << "[READ] " << substr << endl;
             v.push_back(stof(substr));
         }
 
@@ -162,10 +162,10 @@ int main(int argc, char **argv)
         matrix = initMatrix(matrix, matrixVec, dim);
     }
 
-    cout << "[INFO] DIM=" << dim << endl;
+    // cout << "[INFO] DIM=" << dim << endl;
 
     /* Performing a timed task */
-    printMatrix(matrix, dim, "Original Matrix");
+    // printMatrix(matrix, dim, "Original Matrix");
 
     auto t1 = high_resolution_clock::now();
     matrix = cholesky<float>(matrix, dim);

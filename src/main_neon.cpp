@@ -30,6 +30,8 @@ template <class T>
 T **cholesky(T **L, int n)
 {
     int i, j, k;
+    float32x4_t q1, q2, prod;
+    float batchSum = 0;
 
     for (j = 0; j < n; j++)
     {
@@ -37,20 +39,15 @@ T **cholesky(T **L, int n)
         memset(&L[j][j + 1], 0, sizeof(T) * (n - j - 1));
         i = j;
 
-        // Diagnal
-
-        float32x4_t neon;
-        float32x4_t prod;
-
-        float batchSum = 0;
+        // Diagnal NEON
         for (k = 0; k + 3 < i; k += 4)
         {
-            neon = vld1q_f32(&L[j][k]);
-            prod = vmulq_f32(neon, neon);
+            q1 = vld1q_f32(&L[j][k]);
+            prod = vmulq_f32(q1, q1);
             batchSum = vaddvq_f32(prod);
             L[j][j] -= batchSum;
         }
-
+        // Diagnal Remainder
         for (k = k; k < i; k++)
         {
             L[j][j] -= L[j][k] * L[j][k];
@@ -58,13 +55,23 @@ T **cholesky(T **L, int n)
 
         L[i][i] = sqrt(L[j][j]);
 
-        // Calculate left
         for (i = j + 1; i < n; i++)
         {
-            for (k = 0; k < j; k++)
+            // Bottom NEON
+            for (k = 0; k + 3 < j; k += 4)
+            {
+                q1 = vld1q_f32(&L[i][k]);
+                q2 = vld1q_f32(&L[j][k]);
+                prod = vmulq_f32(q1, q2);
+                batchSum = vaddvq_f32(prod);
+                L[i][j] -= batchSum;
+            }
+            // Bottom Remainder
+            for (k = k; k < j; k++)
             {
                 L[i][j] = L[i][j] - L[i][k] * L[j][k];
             }
+
             L[i][j] = L[i][j] / L[j][j];
         }
     }

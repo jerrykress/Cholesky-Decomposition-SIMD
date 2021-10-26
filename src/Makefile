@@ -19,5 +19,5 @@ run:
 
 clean:
 	@echo "Cleaning built binaries and generated input files..."
-	rm ${OUTPUT}
+	rm *.elf
 	rm *.txt
