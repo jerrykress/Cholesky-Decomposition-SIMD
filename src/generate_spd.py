@@ -3,14 +3,18 @@
 
 import numpy as np
 import sys
+from termcolor import colored
 
 # get size
 args = sys.argv
+if(len(args) < 2):
+    print (colored("Error! Generation dimension not specified. Abort", 'red'))
+    sys.exit()
 dim = int(args[1])
 
 # check valid dim
 if type(dim) != type(1) or dim < 3:
-    print("Input dimension type error. Abort")
+    print (colored("Input dimension type error. Abort", 'red'))
     sys.exit()
 
 # create matrix
@@ -33,3 +37,6 @@ with open(filename, "w") as f:
 with open(filename, "r") as f:
     for line in f.readlines():
         print(line)
+
+msg = "Successfully generated new file: " + filename
+print(colored(msg, "green"))

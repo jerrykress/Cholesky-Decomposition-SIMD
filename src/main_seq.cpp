@@ -91,7 +91,6 @@ float **initMatrix(float **destination, vector<vector<float>> &origin, int n)
         for (int j = 0; j < n; j++)
         {
             destination[i][j] = origin[i][j];
-            // cout << "[INIT]" << destination[i][j] << endl;
         }
     }
     return destination;
@@ -151,6 +150,24 @@ bool validMatrix(vector<vector<float>> &m)
     return true;
 }
 
+/*
+    Write matrix output to a file
+*/
+template <class T>
+void writeOuput(T **L)
+{
+    ofstream output;
+    output.open("main_seq_out.txt");
+    for (int i = 0; i < dim; i++)
+    {
+        for (int j = 0; j < dim; j++)
+        {
+            output << setprecision(5) << L[i][j] << " ";
+        }
+        output << endl;
+    }
+}
+
 int main(int argc, char **argv)
 {
     string filename = argv[1];
@@ -172,11 +189,11 @@ int main(int argc, char **argv)
     auto t2 = high_resolution_clock::now();
 
     printMatrix(matrix, dim, "Decomposed Matrix");
+    writeOuput<float>(matrix);
 
     /* Getting number of milliseconds as a double */
     duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "[RESULT] " << ms_double.count() << " ms\n"
-              << endl;
+    // std::cout << "[RESULT] " << ms_double.count() << " ms\n" << endl;
 
     return 0;
 }

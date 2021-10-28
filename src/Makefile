@@ -5,8 +5,11 @@ CC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-
 PROG_SEQ  = main_seq
 PROG_SIMD = main_neon
 
-RUN_PROG = ${PROG_SEQ}
-TEST_FILE = input_128x128.txt
+TEST_FILE = input_${DIM}x${DIM}.txt
+
+generate:
+	@echo "Generating a random input file of size ${DIM}"
+	python3 generate_spd.py ${DIM}
 
 compile:
 	@echo "Compiling to aarch64..."
@@ -15,7 +18,12 @@ compile:
 
 run:
 	@echo "Running compiled binary..."
-	chmod +x ${RUN_PROG}.elf && ./${RUN_PROG}.elf ${TEST_FILE}
+	chmod +x ${PROG_SEQ}.elf && ./${PROG_SEQ}.elf ${TEST_FILE}
+	chmod +x ${PROG_SIMD}.elf && ./${PROG_SIMD}.elf ${TEST_FILE}
+
+check:
+	@echo "Compare output..."
+	python3 check_result.py ${PROG_SEQ}_out.txt ${PROG_SIMD}_out.txt
 
 clean:
 	@echo "Cleaning built binaries and generated input files..."
