@@ -11,6 +11,7 @@
 #include <string>
 #include <stdexcept>
 #include <sstream>
+#include <unistd.h>
 
 using namespace std;
 using std::chrono::duration;
@@ -128,6 +129,13 @@ void readMatrix(string filename, vector<vector<float>> &destination, char delim 
     // setup stream and line buffer
     ifstream file(filename);
     string line;
+
+    // check if file exists
+    if (!file.good())
+    {
+        cout << "Error! Such file does not exist: " << filename << endl;
+        return;
+    }
 
     // read file line by line
     while (getline(file, line))

@@ -109,6 +109,13 @@ void readMatrix(string filename, vector<vector<float>> &destination, char delim 
     ifstream file(filename);
     string line;
 
+    // check if file exists
+    if (!file.good())
+    {
+        cout << "Error! Such file does not exist: " << filename << endl;
+        return;
+    }
+
     // read file line by line
     while (getline(file, line))
     {
