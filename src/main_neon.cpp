@@ -55,13 +55,13 @@ T **cholesky(T **L, int n)
             {
             case 0:
                 break;
-            case 1 ... 4:
+            case 1 ... 3:
                 for (k = k; k < i; k++)
                 {
                     L[j][j] -= L[j][k] * L[j][k];
                 }
                 break;
-            case 5 ... 7:
+            case 4 ... 7:
                 q1 = vld1q_f32(&L[j][k]);
                 p1 = vmulq_f32(q1, q1);
                 batchSum = vaddvq_f32(p1);
