@@ -34,9 +34,9 @@ with open(filename, "w") as f:
         f.write(line[:-1] + "\n")
 
 # verify file
-with open(filename, "r") as f:
-    for line in f.readlines():
-        print(line)
+# with open(filename, "r") as f:
+#     for line in f.readlines():
+#         print(line)
 
 msg = "Successfully generated new file: " + filename
 print(colored(msg, "green"))

@@ -31,8 +31,13 @@ template <class T>
 T **cholesky(T **L, int n)
 {
     int i, j, k;
-    float32x4_t q1, q2, prod;
+    int batchSize = 0;
     float batchSum = 0;
+
+    float32x4_t q1, p1;
+    float32x4x2_t q2, p2;
+    float32x4x3_t q3, p3;
+    float32x4x4_t q4, p4;
 
     for (j = 0; j < n; j++)
     {
@@ -41,36 +46,116 @@ T **cholesky(T **L, int n)
         i = j;
 
         // Diagnal NEON
-        for (k = 0; k + 3 < i; k += 4)
+        k = 0;
+        while (k < i)
         {
-            q1 = vld1q_f32(&L[j][k]);
-            prod = vmulq_f32(q1, q1);
-            batchSum = vaddvq_f32(prod);
-            L[j][j] -= batchSum;
-        }
-        // Diagnal Remainder
-        for (k = k; k < i; k++)
-        {
-            L[j][j] -= L[j][k] * L[j][k];
+            batchSize = i - k;
+
+            switch (batchSize)
+            {
+            case 0:
+                break;
+            case 1 ... 4:
+                for (k = k; k < i; k++)
+                {
+                    L[j][j] -= L[j][k] * L[j][k];
+                }
+                break;
+            case 5 ... 7:
+                q1 = vld1q_f32(&L[j][k]);
+                p1 = vmulq_f32(q1, q1);
+                batchSum = vaddvq_f32(p1);
+                L[j][j] -= batchSum;
+                k += 4;
+                break;
+            case 8 ... 11:
+                q2 = vld2q_f32(&L[j][k]);
+                p2.val[0] = vmulq_f32(q2.val[0], q2.val[0]);
+                p2.val[1] = vmulq_f32(q2.val[1], q2.val[1]);
+                batchSum = vaddvq_f32(p2.val[0]) + vaddvq_f32(p2.val[1]);
+                L[j][j] -= batchSum;
+                k += 8;
+                break;
+            case 12 ... 15:
+                q3 = vld3q_f32(&L[j][k]);
+                p3.val[0] = vmulq_f32(q3.val[0], q3.val[0]);
+                p3.val[1] = vmulq_f32(q3.val[1], q3.val[1]);
+                p3.val[2] = vmulq_f32(q3.val[2], q3.val[2]);
+                batchSum = vaddvq_f32(p3.val[0]) + vaddvq_f32(p3.val[1]) + vaddvq_f32(p3.val[2]);
+                L[j][j] -= batchSum;
+                k += 12;
+                break;
+            default:
+                q4 = vld4q_f32(&L[j][k]);
+                p4.val[0] = vmulq_f32(q4.val[0], q4.val[0]);
+                p4.val[1] = vmulq_f32(q4.val[1], q4.val[1]);
+                p4.val[2] = vmulq_f32(q4.val[2], q4.val[2]);
+                p4.val[3] = vmulq_f32(q4.val[3], q4.val[3]);
+                batchSum = vaddvq_f32(p4.val[0]) + vaddvq_f32(p4.val[1]) + vaddvq_f32(p4.val[2]) + vaddvq_f32(p4.val[3]);
+                L[j][j] -= batchSum;
+                k += 16;
+                break;
+            }
         }
 
         L[i][i] = sqrt(L[j][j]);
 
         for (i = j + 1; i < n; i++)
         {
-            // Bottom NEON
-            for (k = 0; k + 3 < j; k += 4)
+            k = 0;
+            while (k < j)
             {
-                q1 = vld1q_f32(&L[i][k]);
-                q2 = vld1q_f32(&L[j][k]);
-                prod = vmulq_f32(q1, q2);
-                batchSum = vaddvq_f32(prod);
-                L[i][j] -= batchSum;
-            }
-            // Bottom Remainder
-            for (k = k; k < j; k++)
-            {
-                L[i][j] = L[i][j] - L[i][k] * L[j][k];
+                batchSize = j - k;
+
+                switch (batchSize)
+                {
+                case 0:
+                    break;
+                case 1 ... 3:
+                    for (k = k; k < j; k++)
+                    {
+                        L[i][j] = L[i][j] - L[i][k] * L[j][k];
+                    }
+                    break;
+                case 4 ... 7:
+                    q1 = vld1q_f32(&L[i][k]);
+                    p1 = vld1q_f32(&L[j][k]);
+                    p1 = vmulq_f32(q1, p1);
+                    batchSum = vaddvq_f32(p1);
+                    L[i][j] -= batchSum;
+                    k += 4;
+                    break;
+                case 8 ... 11:
+                    q2 = vld2q_f32(&L[i][k]);
+                    p2 = vld2q_f32(&L[j][k]);
+                    p2.val[0] = vmulq_f32(q2.val[0], p2.val[0]);
+                    p2.val[1] = vmulq_f32(q2.val[1], p2.val[1]);
+                    batchSum = vaddvq_f32(p2.val[0]) + vaddvq_f32(p2.val[1]);
+                    L[i][j] -= batchSum;
+                    k += 8;
+                    break;
+                case 12 ... 15:
+                    q3 = vld3q_f32(&L[i][k]);
+                    p3 = vld3q_f32(&L[j][k]);
+                    p3.val[0] = vmulq_f32(q3.val[0], p3.val[0]);
+                    p3.val[1] = vmulq_f32(q3.val[1], p3.val[1]);
+                    p3.val[2] = vmulq_f32(q3.val[2], p3.val[2]);
+                    batchSum = vaddvq_f32(p3.val[0]) + vaddvq_f32(p3.val[1]) + vaddvq_f32(p3.val[2]);
+                    L[i][j] -= batchSum;
+                    k += 12;
+                    break;
+                default:
+                    q4 = vld4q_f32(&L[i][k]);
+                    p4 = vld4q_f32(&L[j][k]);
+                    p4.val[0] = vmulq_f32(q4.val[0], p4.val[0]);
+                    p4.val[1] = vmulq_f32(q4.val[1], p4.val[1]);
+                    p4.val[2] = vmulq_f32(q4.val[2], p4.val[2]);
+                    p4.val[3] = vmulq_f32(q4.val[3], p4.val[3]);
+                    batchSum = vaddvq_f32(p4.val[0]) + vaddvq_f32(p4.val[1]) + vaddvq_f32(p4.val[2]) + vaddvq_f32(p4.val[3]);
+                    L[i][j] -= batchSum;
+                    k += 16;
+                    break;
+                }
             }
 
             L[i][j] = L[i][j] / L[j][j];
@@ -111,7 +196,7 @@ float **initMatrix(float **destination, vector<vector<float>> &origin, int n)
         for (int j = 0; j < n; j++)
         {
             destination[i][j] = origin[i][j];
-            cout << "[INIT]" << destination[i][j] << endl;
+            // cout << "[INIT]" << destination[i][j] << endl;
         }
     }
     return destination;
@@ -149,7 +234,7 @@ void readMatrix(string filename, vector<vector<float>> &destination, char delim 
         {
             string substr;
             getline(ss, substr, delim);
-            cout << "[READ] " << substr << endl;
+            // cout << "[READ] " << substr << endl;
             v.push_back(stof(substr));
         }
 
@@ -210,18 +295,18 @@ int main(int argc, char **argv)
     cout << "[INFO] DIM=" << dim << endl;
 
     /* Performing a timed task */
-    printMatrix(matrix, dim, "Original Matrix");
+    // printMatrix(matrix, dim, "Original Matrix");
 
     auto t1 = high_resolution_clock::now();
     matrix = cholesky<float>(matrix, dim);
     auto t2 = high_resolution_clock::now();
 
-    printMatrix(matrix, dim, "Decomposed Matrix");
+    // printMatrix(matrix, dim, "Decomposed Matrix");
     writeOuput<float>(matrix);
 
     /* Getting number of milliseconds as a double */
     duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "[RESULT] " << ms_double.count() << " ms\n"
+    std::cout << "\033[32m[RESULT] " << ms_double.count() << " ms\n\033[0m"
               << endl;
 
     return 0;
