@@ -14,12 +14,13 @@ generate:
 compile:
 	@echo "Compiling to aarch64..."
 	${CC} ${PROG_SEQ}.cpp -o ${PROG_SEQ}.elf
-	${CC} ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
+	${CC} -O3 ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
 
 run:
-	@echo "Running compiled binary..."
-	chmod +x ${PROG_SEQ}.elf && ./${PROG_SEQ}.elf ${TEST_FILE}
-	chmod +x ${PROG_SIMD}.elf && ./${PROG_SIMD}.elf ${TEST_FILE}
+	@echo "Running SEQ on size ${DIM}"
+	@chmod +x ${PROG_SEQ}.elf && ./${PROG_SEQ}.elf ${TEST_FILE}
+	@echo "Running SIMD on size ${DIM}"
+	@chmod +x ${PROG_SIMD}.elf && ./${PROG_SIMD}.elf ${TEST_FILE}
 
 check:
 	@echo "Compare output..."
@@ -27,5 +28,5 @@ check:
 
 clean:
 	@echo "Cleaning built binaries and generated input files..."
-	rm *.elf
-	rm *.txt
+	@rm *.elf
+	@rm *.txt
