@@ -164,7 +164,7 @@ template <class T>
 void writeOuput(T **L)
 {
     ofstream output;
-    output.open("main_seq_out.txt");
+    output.open("main_seq_out.txt", std::ofstream::trunc);
     for (int i = 0; i < dim; i++)
     {
         for (int j = 0; j < dim; j++)

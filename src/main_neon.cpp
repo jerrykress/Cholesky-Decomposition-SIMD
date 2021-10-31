@@ -270,7 +270,7 @@ template <class T>
 void writeOuput(T **L)
 {
     ofstream output;
-    output.open("main_neon_out.txt");
+    output.open("main_neon_out.txt", std::ofstream::trunc);
     for (int i = 0; i < dim; i++)
     {
         for (int j = 0; j < dim; j++)
@@ -292,7 +292,7 @@ int main(int argc, char **argv)
         matrix = initMatrix(matrix, matrixVec, dim);
     }
 
-    cout << "[INFO] DIM=" << dim << endl;
+    // cout << "[INFO] DIM=" << dim << endl;
 
     /* Performing a timed task */
     // printMatrix(matrix, dim, "Original Matrix");

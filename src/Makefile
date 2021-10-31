@@ -9,7 +9,7 @@ TEST_FILE = input_${DIM}x${DIM}.txt
 
 generate:
 	@echo "Generating a random input file of size ${DIM}"
-	python3 generate_spd.py ${DIM}
+	@python3 generate_spd.py ${DIM}
 
 compile:
 	@echo "Compiling to aarch64..."
@@ -24,7 +24,7 @@ run:
 
 check:
 	@echo "Compare output..."
-	python3 check_result.py ${PROG_SEQ}_out.txt ${PROG_SIMD}_out.txt
+	python3 check_result.py ${PROG_SEQ}_out.txt ${PROG_SIMD}_out.txt ${DIM}
 
 clean:
 	@echo "Cleaning built binaries and generated input files..."

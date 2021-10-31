@@ -8,6 +8,7 @@ import sys
 args = sys.argv
 fn1 = args[1]
 fn2 = args[2]
+dim = args[3]
 
 # buffer
 arr1 = []
@@ -44,3 +45,7 @@ if len(arr1) != len(arr2):
 diff = np.array(arr1) - np.array(arr2)
 total = np.sum(diff ** 2)
 print("**** Check passed ****!\n Squared sum difference: ", total)
+
+# Append to testing results
+with open("test_results.txt", 'a') as f:
+    f.write(str(dim) + ' ' + str(total) + '\n')
