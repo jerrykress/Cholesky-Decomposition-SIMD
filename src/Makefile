@@ -17,6 +17,7 @@ compile:
 	${CC} -O3 ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
 
 run:
+	@mkdir -p out
 	@echo "Running SEQ on size ${DIM}"
 	@chmod +x ${PROG_SEQ}.elf && ./${PROG_SEQ}.elf ${TEST_FILE}
 	@echo "Running SIMD on size ${DIM}"

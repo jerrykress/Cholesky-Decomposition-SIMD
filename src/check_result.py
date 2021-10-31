@@ -3,6 +3,7 @@
 
 import numpy as np
 import sys
+from termcolor import colored
 
 # get input
 args = sys.argv
@@ -43,9 +44,11 @@ if len(arr1) != len(arr2):
 
 # Calculate diff
 diff = np.array(arr1) - np.array(arr2)
-total = np.sum(diff ** 2)
-print("**** Check passed ****!\n Squared sum difference: ", total)
+total = np.nansum(np.absolute(diff))
+percent = total/np.nansum(arr1) * 100
+msg = "[DIFF] " + str(total)
+print(colored(msg, "green"))
 
 # Append to testing results
 with open("test_results.txt", 'a') as f:
-    f.write(str(dim) + ' ' + str(total) + '\n')
+    f.write(str(dim) + ' ' + str(total) + ' ' + str(percent) + '\n')

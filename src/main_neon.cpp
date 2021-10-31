@@ -269,8 +269,8 @@ bool validMatrix(vector<vector<float>> &m)
 template <class T>
 void writeOuput(T **L)
 {
-    ofstream output;
-    output.open("main_neon_out.txt", std::ofstream::trunc);
+    string fn_out = "./out/main_neon_out_" + to_string(dim) + ".txt";
+    ofstream output(fn_out, std::ofstream::trunc);
     for (int i = 0; i < dim; i++)
     {
         for (int j = 0; j < dim; j++)

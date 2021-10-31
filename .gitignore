@@ -32,5 +32,8 @@
 *.app
 *.elf
 
+# Cached Output
+*.txt
+
 # Compiler
 compiler/
