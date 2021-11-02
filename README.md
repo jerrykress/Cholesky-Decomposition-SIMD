@@ -18,7 +18,7 @@ Extract using
 
 ## How to use
 
-Compile all versions
+Compile all versions of binaries
 
 > `make`
 
@@ -32,4 +32,8 @@ Run program for a matrix size
 
 Compare the output from NEON against squential
 
-> `make check`
+> `make check <FILE_1> <FILE_2>`
+
+Run an automatic test on a range of sizes and generate a report file
+
+> `make test DIM1=<RANGE_BEGIN> DIM2=<RANGE_END>`
