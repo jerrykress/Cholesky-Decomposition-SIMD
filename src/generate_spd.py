@@ -23,7 +23,6 @@ B = np.dot(A, A.transpose())
 
 # get filename
 filename = "input_" + str(dim) + "x" + str(dim) + ".txt"
-print("Creating SPD Matrix:", filename, "\n")
 
 # write to file
 with open(filename, "w") as f:
@@ -38,5 +37,5 @@ with open(filename, "w") as f:
 #     for line in f.readlines():
 #         print(line)
 
-msg = "Successfully generated new file: " + filename
+msg = "Generated matrix: " + filename
 print(colored(msg, "green"))

@@ -269,7 +269,7 @@ bool validMatrix(vector<vector<float>> &m)
 template <class T>
 void writeOuput(T **L)
 {
-    string fn_out = "./out/main_neon_out_" + to_string(dim) + ".txt";
+    string fn_out = "./output/main_neon_out_" + to_string(dim) + ".txt";
     ofstream output(fn_out, std::ofstream::trunc);
     for (int i = 0; i < dim; i++)
     {
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 
     /* Getting number of milliseconds as a double */
     duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "\033[32m[RESULT] " << ms_double.count() << " ms\n\033[0m"
+    std::cout << "\033[32m[RESULT] " << ms_double.count() << " ms\033[0m"
               << endl;
 
     return 0;
