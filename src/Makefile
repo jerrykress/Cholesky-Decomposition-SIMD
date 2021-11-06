@@ -14,25 +14,31 @@ PROG_SIMD = main_neon
 IN_PATH = input
 OUT_PATH = output
 
-RESULT_FILE = test_results.txt
+# default input filename
 TEST_FILE = input_${DIM}x${DIM}.txt
+# compliation results from a testing session
+RESULT_FILE = test_results.txt
+# step increment during testing (default 1)
 STEP ?= 1
+# keep exisiting generated input and output files (in case of testing failure, this servres as a checkpoint resume)
+KEEP_HISTORY ?= 0
+# generate new input files when testing, default true (turn off when inputs are preloaded)
+GENERATE_NEW ?= 1 
 
 generate:
 	@echo "Generating random input size ${DIM}"
-	@rm -rf ${IN_PATH}
-	@mkdir -p ${IN_PATH}
-	@python3 generate_spd.py ${DIM}
-	@mv ${TEST_FILE} ${IN_PATH}
+	@if [ ${GENERATE_NEW} = 1 ]; then\
+        rm -rf ${IN_PATH}; mkdir -p ${IN_PATH}; python3 generate_spd.py ${DIM}; mv ${TEST_FILE} ${IN_PATH};\
+    fi
+	@if [ ${GENERATE_NEW} = 0 ]; then\
+    	echo "Attempting preloaded input. No new file generated";\
+    fi
 
 compile:
-	@echo "Compiling to aarch64..."
+	@echo "Compiling sequential code..."
 	${CC} ${PROG_SEQ}.cpp -o ${PROG_SEQ}.elf
+	@echo "Compiling SIMD code..."
 	${CC} -march=armv8-a -O3 ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
-
-compile_fast:
-	${CC} -O3 ${PROG_SEQ}.cpp -o ${PROG_SEQ}_O3.elf
-	${CC} -O3 ${PROG_SIMD}.cpp -o ${PROG_SIMD}_O3.elf
 
 run:
 	@mkdir -p ${OUT_PATH}
@@ -44,14 +50,13 @@ run:
 test:
 	@echo "Testing sizes from ${DIM1} up to ${DIM2}"
 	@touch *
-	@rm -rf ${IN_PATH}
-	@rm -rf ${OUT_PATH}
-	@rm -f ${RESULT_FILE}
+	@if [ ${KEEP_HISTORY} = 0 ]; then\
+        rm -rf ${IN_PATH}; rm -rf ${OUT_PATH}; rm -f ${RESULT_FILE};\
+    fi
 	@i=${DIM1}; while [ "$$i" -le ${DIM2} ]; do \
-		clear; echo "${CYAN}Testing $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i; make -s run DIM=$$i; make -s check DIM=$$i; i=$$((i + ${STEP}));\
+		clear; echo "${CYAN}Testing $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i GENERATE_NEW=${GENERATE_NEW}; make -s run DIM=$$i; make -s check DIM=$$i; i=$$((i + ${STEP}));\
   	done
 	@make -s graph
-
 
 check:
 	@echo "Compare output..."
