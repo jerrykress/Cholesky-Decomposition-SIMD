@@ -45,10 +45,10 @@ if len(arr1) != len(arr2):
 # Calculate diff
 diff = np.array(arr1) - np.array(arr2)
 total = np.nansum(np.absolute(diff))
-percent = total/np.nansum(arr1) * 100
-msg = "[DIFF] " + str(total)
+percent = total / np.nansum(arr1) * 100
+msg = "[DIFF] " + str(total) + "(" + str(percent) + "%)"
 print(colored(msg, "green"))
 
 # Append to testing results
-with open("test_results.txt", 'a') as f:
-    f.write(str(dim) + ' ' + str(total) + ' ' + str(percent) + '\n')
+with open("test_results.txt", "a") as f:
+    f.write(str(dim) + " " + str(total) + " " + str(percent) + "\n")

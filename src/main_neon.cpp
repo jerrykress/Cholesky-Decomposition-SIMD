@@ -34,6 +34,7 @@ T **cholesky(T **L, int n)
     int batchSize = 0;
     float batchSum = 0;
 
+    float32x4_t lane = vdupq_n_f32(0);
     float32x4_t q1, p1;
     float32x4x2_t q2, p2;
     float32x4x3_t q3, p3;
@@ -44,6 +45,9 @@ T **cholesky(T **L, int n)
         // Replace with 0
         memset(&L[j][j + 1], 0, sizeof(T) * (n - j - 1));
         i = j;
+
+        //
+        // lane = vdupq_n_f32(0);
 
         // Diagnal NEON
         k = 0;
@@ -58,50 +62,44 @@ T **cholesky(T **L, int n)
             case 1 ... 3:
                 for (k = k; k < i; k++)
                 {
-                    L[j][j] -= L[j][k] * L[j][k];
+                    L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
                 }
                 break;
             case 4 ... 7:
                 q1 = vld1q_f32(&L[j][k]);
-                p1 = vmulq_f32(q1, q1);
-                batchSum = vaddvq_f32(p1);
-                L[j][j] -= batchSum;
+                lane = vmlsq_f32(lane, q1, q1);
                 k += 4;
                 break;
             case 8 ... 11:
                 q2 = vld2q_f32(&L[j][k]);
-                p2.val[0] = vmulq_f32(q2.val[0], q2.val[0]);
-                p2.val[1] = vmulq_f32(q2.val[1], q2.val[1]);
-                batchSum = vaddvq_f32(p2.val[0]) + vaddvq_f32(p2.val[1]);
-                L[j][j] -= batchSum;
+                lane = vmlsq_f32(lane, q2.val[0], q2.val[0]);
+                lane = vmlsq_f32(lane, q2.val[1], q2.val[1]);
                 k += 8;
                 break;
             case 12 ... 15:
                 q3 = vld3q_f32(&L[j][k]);
-                p3.val[0] = vmulq_f32(q3.val[0], q3.val[0]);
-                p3.val[1] = vmulq_f32(q3.val[1], q3.val[1]);
-                p3.val[2] = vmulq_f32(q3.val[2], q3.val[2]);
-                batchSum = vaddvq_f32(p3.val[0]) + vaddvq_f32(p3.val[1]) + vaddvq_f32(p3.val[2]);
-                L[j][j] -= batchSum;
+                lane = vmlsq_f32(lane, q3.val[0], q3.val[0]);
+                lane = vmlsq_f32(lane, q3.val[1], q3.val[1]);
+                lane = vmlsq_f32(lane, q3.val[2], q3.val[2]);
                 k += 12;
                 break;
             default:
                 q4 = vld4q_f32(&L[j][k]);
-                p4.val[0] = vmulq_f32(q4.val[0], q4.val[0]);
-                p4.val[1] = vmulq_f32(q4.val[1], q4.val[1]);
-                p4.val[2] = vmulq_f32(q4.val[2], q4.val[2]);
-                p4.val[3] = vmulq_f32(q4.val[3], q4.val[3]);
-                batchSum = vaddvq_f32(p4.val[0]) + vaddvq_f32(p4.val[1]) + vaddvq_f32(p4.val[2]) + vaddvq_f32(p4.val[3]);
-                L[j][j] -= batchSum;
+                lane = vmlsq_f32(lane, q4.val[0], q4.val[0]);
+                lane = vmlsq_f32(lane, q4.val[1], q4.val[1]);
+                lane = vmlsq_f32(lane, q4.val[2], q4.val[2]);
+                lane = vmlsq_f32(lane, q4.val[3], q4.val[3]);
                 k += 16;
                 break;
             }
         }
 
+        L[j][j] += vaddvq_f32(lane);
         L[i][i] = sqrt(L[j][j]);
 
         for (i = j + 1; i < n; i++)
         {
+            lane = vdupq_n_f32(0);
             k = 0;
             while (k < j)
             {
@@ -120,44 +118,37 @@ T **cholesky(T **L, int n)
                 case 4 ... 7:
                     q1 = vld1q_f32(&L[i][k]);
                     p1 = vld1q_f32(&L[j][k]);
-                    p1 = vmulq_f32(q1, p1);
-                    batchSum = vaddvq_f32(p1);
-                    L[i][j] -= batchSum;
+                    lane = vmlsq_f32(lane, q1, p1);
                     k += 4;
                     break;
                 case 8 ... 11:
                     q2 = vld2q_f32(&L[i][k]);
                     p2 = vld2q_f32(&L[j][k]);
-                    p2.val[0] = vmulq_f32(q2.val[0], p2.val[0]);
-                    p2.val[1] = vmulq_f32(q2.val[1], p2.val[1]);
-                    batchSum = vaddvq_f32(p2.val[0]) + vaddvq_f32(p2.val[1]);
-                    L[i][j] -= batchSum;
+                    lane = vmlsq_f32(lane, q2.val[0], p2.val[0]);
+                    lane = vmlsq_f32(lane, q2.val[1], p2.val[1]);
                     k += 8;
                     break;
                 case 12 ... 15:
                     q3 = vld3q_f32(&L[i][k]);
                     p3 = vld3q_f32(&L[j][k]);
-                    p3.val[0] = vmulq_f32(q3.val[0], p3.val[0]);
-                    p3.val[1] = vmulq_f32(q3.val[1], p3.val[1]);
-                    p3.val[2] = vmulq_f32(q3.val[2], p3.val[2]);
-                    batchSum = vaddvq_f32(p3.val[0]) + vaddvq_f32(p3.val[1]) + vaddvq_f32(p3.val[2]);
-                    L[i][j] -= batchSum;
+                    lane = vmlsq_f32(lane, q3.val[0], p3.val[0]);
+                    lane = vmlsq_f32(lane, q3.val[1], p3.val[1]);
+                    lane = vmlsq_f32(lane, q3.val[2], p3.val[2]);
                     k += 12;
                     break;
                 default:
                     q4 = vld4q_f32(&L[i][k]);
                     p4 = vld4q_f32(&L[j][k]);
-                    p4.val[0] = vmulq_f32(q4.val[0], p4.val[0]);
-                    p4.val[1] = vmulq_f32(q4.val[1], p4.val[1]);
-                    p4.val[2] = vmulq_f32(q4.val[2], p4.val[2]);
-                    p4.val[3] = vmulq_f32(q4.val[3], p4.val[3]);
-                    batchSum = vaddvq_f32(p4.val[0]) + vaddvq_f32(p4.val[1]) + vaddvq_f32(p4.val[2]) + vaddvq_f32(p4.val[3]);
-                    L[i][j] -= batchSum;
+                    lane = vmlsq_f32(lane, q4.val[0], p4.val[0]);
+                    lane = vmlsq_f32(lane, q4.val[1], p4.val[1]);
+                    lane = vmlsq_f32(lane, q4.val[2], p4.val[2]);
+                    lane = vmlsq_f32(lane, q4.val[3], p4.val[3]);
                     k += 16;
                     break;
                 }
             }
 
+            L[i][j] += vaddvq_f32(lane);
             L[i][j] = L[i][j] / L[j][j];
         }
     }
