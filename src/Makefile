@@ -38,7 +38,7 @@ compile:
 	@echo "Compiling sequential code..."
 	${CC} ${PROG_SEQ}.cpp -o ${PROG_SEQ}.elf
 	@echo "Compiling SIMD code..."
-	${CC} -march=armv8-a -O3 ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
+	${CC} -march=armv8-a ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
 
 run:
 	@mkdir -p ${OUT_PATH}
