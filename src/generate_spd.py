@@ -7,14 +7,14 @@ from termcolor import colored
 
 # get size
 args = sys.argv
-if(len(args) < 2):
-    print (colored("Error! Generation dimension not specified. Abort", 'red'))
+if len(args) < 2:
+    print(colored("Error! Generation dimension not specified. Abort", "red"))
     sys.exit()
 dim = int(args[1])
 
 # check valid dim
 if type(dim) != type(1) or dim < 3:
-    print (colored("Input dimension type error. Abort", 'red'))
+    print(colored("Input dimension type error. Abort", "red"))
     sys.exit()
 
 # create matrix

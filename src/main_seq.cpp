@@ -43,7 +43,7 @@ T **cholesky(T **L, int n)
         {
             L[j][j] -= L[j][k] * L[j][k];
         }
-
+        // cout << "$1: " << i << " " << L[j][j] << endl;
         L[i][i] = sqrt(L[j][j]);
 
         // Calculate left
@@ -54,6 +54,7 @@ T **cholesky(T **L, int n)
                 L[i][j] = L[i][j] - L[i][k] * L[j][k];
             }
             L[i][j] = L[i][j] / L[j][j];
+            // cout << "$2: " << i << "," << j << " " << L[i][j] << " " << L[j][j] << endl;
         }
     }
 
@@ -169,7 +170,7 @@ void writeOuput(T **L)
     {
         for (int j = 0; j < dim; j++)
         {
-            output << setprecision(5) << L[i][j] << " ";
+            output << L[i][j] << " ";
         }
         output << endl;
     }

@@ -47,12 +47,13 @@ T **cholesky(T **L, int n)
         i = j;
 
         //
-        // lane = vdupq_n_f32(0);
+        lane = vdupq_n_f32(0);
 
         // Diagnal NEON
         k = 0;
         while (k < i)
         {
+            // lane = vdupq_n_f32(0); // [2]
             batchSize = i - k;
 
             switch (batchSize)
@@ -69,12 +70,14 @@ T **cholesky(T **L, int n)
                 q1 = vld1q_f32(&L[j][k]);
                 lane = vmlsq_f32(lane, q1, q1);
                 k += 4;
+                // cout << "N4" << endl;
                 break;
             case 8 ... 11:
                 q2 = vld2q_f32(&L[j][k]);
                 lane = vmlsq_f32(lane, q2.val[0], q2.val[0]);
                 lane = vmlsq_f32(lane, q2.val[1], q2.val[1]);
                 k += 8;
+                // cout << "N8" << endl;
                 break;
             case 12 ... 15:
                 q3 = vld3q_f32(&L[j][k]);
@@ -92,9 +95,12 @@ T **cholesky(T **L, int n)
                 k += 16;
                 break;
             }
+            // cout << "---$SUM1: " << vaddvq_f32(lane) << endl;
+            // L[j][j] += vaddvq_f32(lane); // [2]
         }
 
         L[j][j] += vaddvq_f32(lane);
+        // cout << "$N: " << j << " " << L[j][j] << endl;
         L[i][i] = sqrt(L[j][j]);
 
         for (i = j + 1; i < n; i++)
@@ -150,6 +156,7 @@ T **cholesky(T **L, int n)
 
             L[i][j] += vaddvq_f32(lane);
             L[i][j] = L[i][j] / L[j][j];
+            // cout << "---$SUM2: " << i << "," << j << " " << L[i][j] << " " << L[j][j] << endl;
         }
     }
 
@@ -266,7 +273,7 @@ void writeOuput(T **L)
     {
         for (int j = 0; j < dim; j++)
         {
-            output << setprecision(5) << L[i][j] << " ";
+            output << L[i][j] << " ";
         }
         output << endl;
     }

@@ -44,7 +44,7 @@ if len(arr1) != len(arr2):
 
 # Calculate diff
 diff = np.array(arr1) - np.array(arr2)
-total = np.nansum(np.absolute(diff))
+total = np.nansum(diff ** 2)
 percent = total / np.nansum(arr1) * 100
 msg = "[DIFF] " + str(total) + "(" + str(percent) + "%)"
 print(colored(msg, "green"))

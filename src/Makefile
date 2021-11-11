@@ -20,15 +20,15 @@ TEST_FILE = input_${DIM}x${DIM}.txt
 RESULT_FILE = test_results.txt
 # step increment during testing (default 1)
 STEP ?= 1
-# keep exisiting generated input and output files (in case of testing failure, this servres as a checkpoint resume)
+# keep old input and output files from the last test (in case of testing failure, this servres as a checkpoint resume)
 KEEP_HISTORY ?= 0
-# generate new input files when testing, default true (turn off when inputs are preloaded)
+# generate new input files when testing, default true (turn off when inputs are preloaded, in case old input files from last test are still available)
 GENERATE_NEW ?= 1 
 
 generate:
 	@echo "Generating random input size ${DIM}"
 	@if [ ${GENERATE_NEW} = 1 ]; then\
-        rm -rf ${IN_PATH}; mkdir -p ${IN_PATH}; python3 generate_spd.py ${DIM}; mv ${TEST_FILE} ${IN_PATH};\
+        mkdir -p ${IN_PATH}; python3 generate_spd.py ${DIM}; mv ${TEST_FILE} ${IN_PATH};\
     fi
 	@if [ ${GENERATE_NEW} = 0 ]; then\
     	echo "Attempting preloaded input. No new file generated";\
@@ -54,7 +54,7 @@ test:
         rm -rf ${IN_PATH}; rm -rf ${OUT_PATH}; rm -f ${RESULT_FILE};\
     fi
 	@i=${DIM1}; while [ "$$i" -le ${DIM2} ]; do \
-		clear; echo "${CYAN}Testing $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i GENERATE_NEW=${GENERATE_NEW}; make -s run DIM=$$i; make -s check DIM=$$i; i=$$((i + ${STEP}));\
+		clear; echo "${CYAN}Testing $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i GENERATE_NEW=${GENERATE_NEW}; make -s run DIM=$$i; make -s check DIM=$$i; i=$$((i * ${STEP}));\
   	done
 	@make -s graph
 
