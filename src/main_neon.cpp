@@ -30,7 +30,7 @@ int dim;
 template <class T>
 T **cholesky(T **L, int n)
 {
-    int i, j, k;
+    int i, j, k, num_f32x4x4;
     int batchSize = 0;
     float batchSum = 0;
 
@@ -42,106 +42,48 @@ T **cholesky(T **L, int n)
 
     for (j = 0; j < n; j++)
     {
-        // Replace with 0
         memset(&L[j][j + 1], 0, sizeof(T) * (n - j - 1));
         i = j;
 
-        // Diagnal NEON
-        k = 0;
-        while (k < i)
+        num_f32x4x4 = i / 16;
+
+        for (k = 0; k < num_f32x4x4; k++)
         {
             lane = vdupq_n_f32(0);
-            batchSize = i - k;
-
-            switch (batchSize)
-            {
-            case 0:
-                break;
-            case 1 ... 3:
-                L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
-                k++;
-                break;
-            case 4 ... 7:
-                q1 = vld1q_f32(&L[j][k]);
-                lane = vmlsq_f32(lane, q1, q1);
-                k += 4;
-                break;
-            case 8 ... 11:
-                q2 = vld2q_f32(&L[j][k]);
-                lane = vmlsq_f32(lane, q2.val[0], q2.val[0]);
-                lane = vmlsq_f32(lane, q2.val[1], q2.val[1]);
-                k += 8;
-                break;
-            case 12 ... 15:
-                q3 = vld3q_f32(&L[j][k]);
-                lane = vmlsq_f32(lane, q3.val[0], q3.val[0]);
-                lane = vmlsq_f32(lane, q3.val[1], q3.val[1]);
-                lane = vmlsq_f32(lane, q3.val[2], q3.val[2]);
-                k += 12;
-                break;
-            default:
-                q4 = vld4q_f32(&L[j][k]);
-                lane = vmlsq_f32(lane, q4.val[0], q4.val[0]);
-                lane = vmlsq_f32(lane, q4.val[1], q4.val[1]);
-                lane = vmlsq_f32(lane, q4.val[2], q4.val[2]);
-                lane = vmlsq_f32(lane, q4.val[3], q4.val[3]);
-                k += 16;
-                break;
-            }
-
+            q4 = vld4q_f32(&L[j][k * 16]);
+            lane = vmlsq_f32(lane, q4.val[0], q4.val[0]);
+            lane = vmlsq_f32(lane, q4.val[1], q4.val[1]);
+            lane = vmlsq_f32(lane, q4.val[2], q4.val[2]);
+            lane = vmlsq_f32(lane, q4.val[3], q4.val[3]);
             L[j][j] += vaddvq_f32(lane);
+        }
+
+        for (k = num_f32x4x4 * 16; k < i; k++)
+        {
+            L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
         }
 
         L[j][j] = sqrt(L[j][j]);
 
         for (i = j + 1; i < n; i++)
         {
-            k = 0;
-            while (k < j)
+            num_f32x4x4 = j / 16;
+
+            for (k = 0; k < num_f32x4x4; k++)
             {
                 lane = vdupq_n_f32(0);
-                batchSize = j - k;
-
-                switch (batchSize)
-                {
-                case 0:
-                    break;
-                case 1 ... 3:
-                    L[i][j] = fma(-L[i][k], L[j][k], L[i][j]);
-                    k++;
-                    break;
-                case 4 ... 7:
-                    q1 = vld1q_f32(&L[i][k]);
-                    p1 = vld1q_f32(&L[j][k]);
-                    lane = vmlsq_f32(lane, q1, p1);
-                    k += 4;
-                    break;
-                case 8 ... 11:
-                    q2 = vld2q_f32(&L[i][k]);
-                    p2 = vld2q_f32(&L[j][k]);
-                    lane = vmlsq_f32(lane, q2.val[0], p2.val[0]);
-                    lane = vmlsq_f32(lane, q2.val[1], p2.val[1]);
-                    k += 8;
-                    break;
-                case 12 ... 15:
-                    q3 = vld3q_f32(&L[i][k]);
-                    p3 = vld3q_f32(&L[j][k]);
-                    lane = vmlsq_f32(lane, q3.val[0], p3.val[0]);
-                    lane = vmlsq_f32(lane, q3.val[1], p3.val[1]);
-                    lane = vmlsq_f32(lane, q3.val[2], p3.val[2]);
-                    k += 12;
-                    break;
-                default:
-                    q4 = vld4q_f32(&L[i][k]);
-                    p4 = vld4q_f32(&L[j][k]);
-                    lane = vmlsq_f32(lane, q4.val[0], p4.val[0]);
-                    lane = vmlsq_f32(lane, q4.val[1], p4.val[1]);
-                    lane = vmlsq_f32(lane, q4.val[2], p4.val[2]);
-                    lane = vmlsq_f32(lane, q4.val[3], p4.val[3]);
-                    k += 16;
-                    break;
-                }
+                q4 = vld4q_f32(&L[i][k * 16]);
+                p4 = vld4q_f32(&L[j][k * 16]);
+                lane = vmlsq_f32(lane, q4.val[0], p4.val[0]);
+                lane = vmlsq_f32(lane, q4.val[1], p4.val[1]);
+                lane = vmlsq_f32(lane, q4.val[2], p4.val[2]);
+                lane = vmlsq_f32(lane, q4.val[3], p4.val[3]);
                 L[i][j] += vaddvq_f32(lane);
+            }
+
+            for (k = num_f32x4x4 * 16; k < j; k++)
+            {
+                L[i][j] = fma(-L[i][k], L[j][k], L[i][j]);
             }
 
             L[i][j] /= L[j][j];
