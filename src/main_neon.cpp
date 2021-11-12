@@ -58,10 +58,8 @@ T **cholesky(T **L, int n)
             case 0:
                 break;
             case 1 ... 3:
-                for (k = k; k < i; k++)
-                {
-                    L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
-                }
+                L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
+                k++;
                 break;
             case 4 ... 7:
                 q1 = vld1q_f32(&L[j][k]);
@@ -94,7 +92,7 @@ T **cholesky(T **L, int n)
             L[j][j] += vaddvq_f32(lane);
         }
 
-        L[i][i] = sqrt(L[j][j]);
+        L[j][j] = sqrt(L[j][j]);
 
         for (i = j + 1; i < n; i++)
         {
@@ -109,10 +107,8 @@ T **cholesky(T **L, int n)
                 case 0:
                     break;
                 case 1 ... 3:
-                    for (k = k; k < j; k++)
-                    {
-                        L[i][j] = L[i][j] - L[i][k] * L[j][k];
-                    }
+                    L[i][j] = fma(-L[i][k], L[j][k], L[i][j]);
+                    k++;
                     break;
                 case 4 ... 7:
                     q1 = vld1q_f32(&L[i][k]);
@@ -148,7 +144,7 @@ T **cholesky(T **L, int n)
                 L[i][j] += vaddvq_f32(lane);
             }
 
-            L[i][j] = L[i][j] / L[j][j];
+            L[i][j] /= L[j][j];
         }
     }
 
