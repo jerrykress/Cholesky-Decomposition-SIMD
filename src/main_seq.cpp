@@ -170,7 +170,7 @@ void writeOuput(T **L)
     {
         for (int j = 0; j < dim; j++)
         {
-            output << L[i][j] << " ";
+            output << setprecision(6) << L[i][j] << " ";
         }
         output << endl;
     }

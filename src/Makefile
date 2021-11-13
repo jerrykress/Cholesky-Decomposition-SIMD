@@ -23,7 +23,10 @@ STEP ?= 1
 # keep old input and output files from the last test (in case of testing failure, this servres as a checkpoint resume)
 KEEP_HISTORY ?= 0
 # generate new input files when testing, default true (turn off when inputs are preloaded, in case old input files from last test are still available)
-GENERATE_NEW ?= 1 
+GENERATE_NEW ?= 1
+# Test mode(1,2) 
+# 1 - float32, 2 - float64
+TEST_MODE ?= 1
 
 generate:
 	@echo "Generating random input size ${DIM}"
@@ -43,9 +46,9 @@ compile:
 run:
 	@mkdir -p ${OUT_PATH}
 	@echo "SEQ @ size=${DIM}"
-	@chmod +x ${PROG_SEQ}.elf && ./${PROG_SEQ}.elf ${IN_PATH}/${TEST_FILE}
+	@chmod +x ${PROG_SEQ}.elf && ./${PROG_SEQ}.elf ${IN_PATH}/${TEST_FILE} ${TEST_MODE}
 	@echo "SIMD @ size=${DIM}"
-	@chmod +x ${PROG_SIMD}.elf && ./${PROG_SIMD}.elf ${IN_PATH}/${TEST_FILE}
+	@chmod +x ${PROG_SIMD}.elf && ./${PROG_SIMD}.elf ${IN_PATH}/${TEST_FILE} ${TEST_MODE}
 
 test:
 	@echo "Testing sizes from ${DIM1} up to ${DIM2}"
