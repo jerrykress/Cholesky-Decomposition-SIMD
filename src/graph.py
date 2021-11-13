@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from termcolor import colored
 
 data = pd.read_csv("test_results.txt", sep=" ", header=None)
-data.columns = ["Input Size", "Sum Error", "Percentage"]
+data.columns = ["Input Size", "Sum Error", "Percentage", "Seq Time", "Neon Time"]
 
 data.plot(x="Input Size", y="Percentage", kind="line")
 

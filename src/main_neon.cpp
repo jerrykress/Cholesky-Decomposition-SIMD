@@ -306,7 +306,7 @@ int main(int argc, char **argv)
             t2 = high_resolution_clock::now();
             duration = (t2 - t1).count();
             std::cout
-                << "\033[32m[RESULT] <f32>" << duration << " ms\033[0m"
+                << "\033[32m[RESULT] <f32> " << duration << " ms\033[0m"
                 << endl;
             writeOuput<float>(matrix_f32, duration);
             break;
@@ -319,7 +319,7 @@ int main(int argc, char **argv)
             t2 = high_resolution_clock::now();
             duration = (t2 - t1).count();
             std::cout
-                << "\033[32m[RESULT] <f64>" << duration << " ms\033[0m"
+                << "\033[32m[RESULT] <f64> " << duration << " ms\033[0m"
                 << endl;
             writeOuput<double>(matrix_f64, duration);
             break;

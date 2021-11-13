@@ -5,17 +5,21 @@ import numpy as np
 import sys
 from termcolor import colored
 
+######################################################################
+#                 Output
+######################################################################
+
 # get input
 args = sys.argv
-fn1 = args[1]
-fn2 = args[2]
-dim = args[3]
+dim = args[1]
+fn1 = args[2]
+fn2 = args[3]
 
 # buffer
 arr1 = []
 arr2 = []
 
-# read file 1
+# read matrix A
 with open(fn1, "r") as f:
     for line in f.readlines():
         for token in line.split():
@@ -26,7 +30,7 @@ with open(fn1, "r") as f:
                 print("Check failed! NaN found in result 1.")
                 sys.exit()
 
-# read file 2
+# read matrix B
 with open(fn2, "r") as f:
     for line in f.readlines():
         for token in line.split():
@@ -49,6 +53,50 @@ percent = total / np.nansum(arr1) * 100
 msg = "[DIFF] " + str(total) + "(" + str(percent) + "%)"
 print(colored(msg, "green"))
 
+
+######################################################################
+#                 Perf
+######################################################################
+
+# get input
+fn3 = args[4]
+fn4 = args[5]
+
+# buffer
+time_a = []
+time_b = []
+duration_a = 0
+duration_b = 0
+
+# get time a
+with open(fn3, "r") as f:
+    for line in f.readlines():
+        for token in line.split():
+            time_a.append(token)
+duration_a = float(time_a[0])
+
+# get time b
+with open(fn4, "r") as f:
+    for line in f.readlines():
+        for token in line.split():
+            time_a.append(token)
+duration_b = float(time_b[0])
+
+######################################################################
+#                 Write Out
+######################################################################
+
 # Append to testing results
 with open("test_results.txt", "a") as f:
-    f.write(str(dim) + " " + str(total) + " " + str(percent) + "\n")
+    f.write(
+        str(dim)
+        + " "
+        + str(total)
+        + " "
+        + str(percent)
+        + " "
+        + str(duration_a)
+        + " "
+        + str(duration_b)
+        + "\n"
+    )

@@ -63,7 +63,7 @@ test:
 
 check:
 	@echo "Compare output..."
-	@python3 check_result.py ${OUT_PATH}/main_seq_out_${DIM}.txt ${OUT_PATH}/main_neon_out_${DIM}.txt ${DIM}
+	@python3 check_result.py ${DIM} ${OUT_PATH}/main_seq_out_${DIM}.txt ${OUT_PATH}/main_neon_out_${DIM}.txt 
 
 graph:
 	@python3 graph.py
