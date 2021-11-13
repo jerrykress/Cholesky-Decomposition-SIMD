@@ -20,7 +20,8 @@ using std::chrono::milliseconds;
 
 // Global Variables
 vector<vector<float>> matrixVec;
-float **matrix;
+float **matrix_f32;
+double **matrix_f64;
 int dim;
 
 /**
@@ -43,7 +44,6 @@ T **cholesky(T **L, int n)
         {
             L[j][j] -= L[j][k] * L[j][k];
         }
-        // cout << "$1: " << i << " " << L[j][j] << endl;
         L[i][i] = sqrt(L[j][j]);
 
         // Calculate left
@@ -54,7 +54,6 @@ T **cholesky(T **L, int n)
                 L[i][j] = L[i][j] - L[i][k] * L[j][k];
             }
             L[i][j] = L[i][j] / L[j][j];
-            // cout << "$2: " << i << "," << j << " " << L[i][j] << " " << L[j][j] << endl;
         }
     }
 
@@ -82,13 +81,14 @@ void printMatrix(float **L, int n, string text = "Print Matrix")
 /**
     Initialise the matrix 2d array from vector
 **/
-float **initMatrix(float **destination, vector<vector<float>> &origin, int n)
+template <class T>
+T **initMatrix(T **destination, vector<vector<float>> &origin, int n)
 {
-    destination = new float *[n];
+    destination = new T *[n];
 
     for (int i = 0; i < n; i++)
     {
-        destination[i] = new float[n];
+        destination[i] = new T[n];
         for (int j = 0; j < n; j++)
         {
             destination[i][j] = origin[i][j];
@@ -162,47 +162,74 @@ bool validMatrix(vector<vector<float>> &m)
     Write matrix output to a file
 */
 template <class T>
-void writeOuput(T **L)
+void writeOuput(T **L, double duration)
 {
+    // write the decomposed matrix
     string fn_out = "./output/main_seq_out_" + to_string(dim) + ".txt";
-    ofstream output(fn_out, std::ofstream::trunc);
+    ofstream matrix_output(fn_out, std::ofstream::trunc);
     for (int i = 0; i < dim; i++)
     {
         for (int j = 0; j < dim; j++)
         {
-            output << setprecision(6) << L[i][j] << " ";
+            matrix_output << setprecision(6) << L[i][j] << " ";
         }
-        output << endl;
+        matrix_output << endl;
     }
+
+    // write performance information
+    string fn_perf = "./output/main_seq_perf_" + to_string(dim) + ".txt";
+    ofstream perf_output(fn_perf, std::ofstream::trunc);
+    perf_output << duration << endl;
 }
 
 int main(int argc, char **argv)
 {
+    /* Read filename */
     string filename = argv[1];
+    /* Read Type of Data = 1,2,3 */
+    int test_mode = stoi(argv[2]);
+    /* Timer */
+    high_resolution_clock::time_point t1, t2;
+    /* Read matrix into vector buffer */
     readMatrix(filename, matrixVec);
 
     /* Initialise */
     if (validMatrix(matrixVec))
     {
-        matrix = initMatrix(matrix, matrixVec, dim);
+        double duration = 0;
+
+        switch (test_mode)
+        {
+        case 1:
+            // float 32
+            matrix_f32 = initMatrix<float>(matrix_f32, matrixVec, dim);
+            t1 = high_resolution_clock::now();
+            matrix_f32 = cholesky<float>(matrix_f32, dim);
+            t2 = high_resolution_clock::now();
+            duration = (t2 - t1).count();
+            std::cout
+                << "\033[32m[RESULT] <f32> " << duration << " ms\033[0m"
+                << endl;
+            writeOuput<float>(matrix_f32, duration);
+            break;
+
+        case 2:
+            // float 64
+            matrix_f64 = initMatrix<double>(matrix_f64, matrixVec, dim);
+            t1 = high_resolution_clock::now();
+            matrix_f64 = cholesky<double>(matrix_f64, dim);
+            t2 = high_resolution_clock::now();
+            duration = (t2 - t1).count();
+            std::cout
+                << "\033[32m[RESULT] <f64> " << duration << " ms\033[0m"
+                << endl;
+            writeOuput<double>(matrix_f64, duration);
+            break;
+
+        default:
+            break;
+        }
     }
-
-    // cout << "[INFO] DIM=" << dim << endl;
-
-    /* Performing a timed task */
-    // printMatrix(matrix, dim, "Original Matrix");
-
-    auto t1 = high_resolution_clock::now();
-    matrix = cholesky<float>(matrix, dim);
-    auto t2 = high_resolution_clock::now();
-
-    // printMatrix(matrix, dim, "Decomposed Matrix");
-    writeOuput<float>(matrix);
-
-    /* Getting number of milliseconds as a double */
-    duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "\033[32m[RESULT] " << ms_double.count() << " ms\033[0m"
-              << endl;
 
     return 0;
 }
