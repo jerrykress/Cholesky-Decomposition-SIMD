@@ -19,7 +19,7 @@ TEST_FILE = input_${DIM}x${DIM}.txt
 # compliation results from a testing session
 RESULT_FILE = test_results.txt
 # step increment during testing (default 1)
-STEP ?= 1
+STEP ?= 2
 # keep old input and output files from the last test (in case of testing failure, this servres as a checkpoint resume)
 KEEP_HISTORY ?= 0
 # generate new input files when testing, default true (turn off when inputs are preloaded, in case old input files from last test are still available)

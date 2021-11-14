@@ -79,7 +79,7 @@ duration_a = float(time_a[0])
 with open(fn4, "r") as f:
     for line in f.readlines():
         for token in line.split():
-            time_a.append(token)
+            time_b.append(token)
 duration_b = float(time_b[0])
 
 ######################################################################

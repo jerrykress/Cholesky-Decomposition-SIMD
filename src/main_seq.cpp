@@ -196,7 +196,7 @@ int main(int argc, char **argv)
     /* Initialise */
     if (validMatrix(matrixVec))
     {
-        double duration = 0;
+        duration<double, std::milli> ms_double;
 
         switch (test_mode)
         {
@@ -206,11 +206,11 @@ int main(int argc, char **argv)
             t1 = high_resolution_clock::now();
             matrix_f32 = cholesky<float>(matrix_f32, dim);
             t2 = high_resolution_clock::now();
-            duration = (t2 - t1).count();
+            ms_double = t2 - t1;
             std::cout
-                << "\033[32m[RESULT] <f32> " << duration << " ms\033[0m"
+                << "\033[32m[RESULT] <f32> " << ms_double.count() << " ms\033[0m"
                 << endl;
-            writeOuput<float>(matrix_f32, duration);
+            writeOuput<float>(matrix_f32, ms_double.count());
             break;
 
         case 2:
@@ -219,11 +219,11 @@ int main(int argc, char **argv)
             t1 = high_resolution_clock::now();
             matrix_f64 = cholesky<double>(matrix_f64, dim);
             t2 = high_resolution_clock::now();
-            duration = (t2 - t1).count();
+            ms_double = t2 - t1;
             std::cout
-                << "\033[32m[RESULT] <f64> " << duration << " ms\033[0m"
+                << "\033[32m[RESULT] <f64> " << ms_double.count() << " ms\033[0m"
                 << endl;
-            writeOuput<double>(matrix_f64, duration);
+            writeOuput<double>(matrix_f64, ms_double.count());
             break;
 
         default:
