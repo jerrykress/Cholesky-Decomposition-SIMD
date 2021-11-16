@@ -9,7 +9,8 @@ CC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-
 DCC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-objdump
 
 PROG_SEQ  = main_seq
-PROG_SIMD = main_neon
+# PROG_SIMD = main_neon
+PROG_SIMD = main_omp
 
 IN_PATH = input
 OUT_PATH = output
@@ -41,7 +42,7 @@ compile:
 	@echo "Compiling sequential code..."
 	${CC} ${PROG_SEQ}.cpp -o ${PROG_SEQ}.elf
 	@echo "Compiling SIMD code..."
-	${CC} -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
+	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
 
 run:
 	@mkdir -p ${OUT_PATH}
@@ -77,3 +78,6 @@ clean:
 	@rm *.txt
 	@rm -rf ${IN_PATH}
 	@rm -rf ${OUT_PATH}
+
+exp:
+	${CC} -fopenmp omp_test.cpp -o omp_test.elf

@@ -24,7 +24,7 @@ with open(fn1, "r") as f:
     for line in f.readlines():
         for token in line.split():
             num = float(token)
-            if num != float("NAN"):
+            if not np.isnan(num):
                 arr1.append(num)
             else:
                 print("Check failed! NaN found in result 1.")
@@ -35,7 +35,7 @@ with open(fn2, "r") as f:
     for line in f.readlines():
         for token in line.split():
             num = float(token)
-            if num != float("NAN"):
+            if not np.isnan(num):
                 arr2.append(num)
             else:
                 print("Check failed! NaN found in result 2.")
