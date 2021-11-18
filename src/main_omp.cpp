@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <sstream>
 #include <unistd.h>
-#include <omp.h>
 
 using namespace std;
 using std::chrono::duration;
@@ -31,51 +30,48 @@ int dim;
 /**
     Cholesky Float 32
 **/
-
 float **cholesky_f32(float **L, int n)
 {
-    cout << "omp_get_num_procs: " << omp_get_num_procs() << endl;
-    cout << "omp_get_max_threads: " << omp_get_max_threads() << endl;
-
-    int i, j, num_f32x4x4;
-    int batchSize = 0;
+    int i, j, k, num_f32x4x4;
+    float ljj = 0;
 
     float32x4_t lane = vdupq_n_f32(0);
     float32x4x4_t q4, p4;
 
     for (j = 0; j < n; j++)
     {
+        num_f32x4x4 = j / 16;
+
         memset(&L[j][j + 1], 0, sizeof(float) * (n - j - 1));
-        i = j;
 
-        num_f32x4x4 = i / 16;
-
-        for (int k = 0; k < num_f32x4x4; k++)
+#pragma omp parallel for reduction(+ \
+                                   : ljj) private(q4, p4, lane)
+        for (k = 0; k < num_f32x4x4; k++)
         {
-            printf("$1 Thread: %d, i=%d, j=%d, k=%d\n", omp_get_thread_num(), i, j, k);
             lane = vdupq_n_f32(0);
             q4 = vld4q_f32(&L[j][k * 16]);
             lane = vmlsq_f32(lane, q4.val[0], q4.val[0]);
             lane = vmlsq_f32(lane, q4.val[1], q4.val[1]);
             lane = vmlsq_f32(lane, q4.val[2], q4.val[2]);
             lane = vmlsq_f32(lane, q4.val[3], q4.val[3]);
-            printf("$2 Thread: %d, k=%d\n", omp_get_thread_num(), k);
-            L[j][j] += vaddvq_f32(lane);
-            printf("$3 Thread: %d, k=%d\n", omp_get_thread_num(), k);
+            ljj += vaddvq_f32(lane);
         }
 
-        for (int k = num_f32x4x4 * 16; k < i; k++)
+#pragma omp parallel for reduction(- \
+                                   : ljj)
+        for (k = num_f32x4x4 * 16; k < j; k++)
         {
-            L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
+            ljj -= L[j][k] * L[j][k];
         }
 
+        L[j][j] += ljj;
         L[j][j] = sqrt(L[j][j]);
+        ljj = 0;
 
+#pragma omp parallel for private(q4, p4, lane, k)
         for (i = j + 1; i < n; i++)
         {
-            num_f32x4x4 = j / 16;
-
-            for (int k = 0; k < num_f32x4x4; k++)
+            for (k = 0; k < num_f32x4x4; k++)
             {
                 lane = vdupq_n_f32(0);
                 q4 = vld4q_f32(&L[i][k * 16]);
@@ -87,7 +83,7 @@ float **cholesky_f32(float **L, int n)
                 L[i][j] += vaddvq_f32(lane);
             }
 
-            for (int k = num_f32x4x4 * 16; k < j; k++)
+            for (k = num_f32x4x4 * 16; k < j; k++)
             {
                 L[i][j] = fma(-L[i][k], L[j][k], L[i][j]);
             }
@@ -105,7 +101,6 @@ float **cholesky_f32(float **L, int n)
 double **cholesky_f64(double **L, int n)
 {
     int i, j, k, num_f64x2x4;
-    int batchSize = 0;
 
     float64x2_t lane = vdupq_n_f64(0);
     float64x2x4_t q4, p4;

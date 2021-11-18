@@ -4,7 +4,8 @@
 CYAN=\033[0;36m
 NC=\033[0m
 
-CC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
+# CC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
+CC = ~/compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
 
 DCC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-objdump
 
@@ -19,6 +20,9 @@ OUT_PATH = output
 TEST_FILE = input_${DIM}x${DIM}.txt
 # compliation results from a testing session
 RESULT_FILE = test_results.txt
+# default test range
+DIM1 ?= 32
+DIM2 ?= 1024
 # step increment during testing (default 1)
 STEP ?= 2
 # keep old input and output files from the last test (in case of testing failure, this servres as a checkpoint resume)

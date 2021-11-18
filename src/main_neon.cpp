@@ -33,20 +33,15 @@ int dim;
 float **cholesky_f32(float **L, int n)
 {
     int i, j, k, num_f32x4x4;
-    int batchSize = 0;
 
     float32x4_t lane = vdupq_n_f32(0);
-    float32x4_t q1, p1;
-    float32x4x2_t q2, p2;
-    float32x4x3_t q3, p3;
     float32x4x4_t q4, p4;
 
     for (j = 0; j < n; j++)
     {
         memset(&L[j][j + 1], 0, sizeof(float) * (n - j - 1));
-        i = j;
 
-        num_f32x4x4 = i / 16;
+        num_f32x4x4 = j / 16;
 
         for (k = 0; k < num_f32x4x4; k++)
         {
@@ -59,7 +54,7 @@ float **cholesky_f32(float **L, int n)
             L[j][j] += vaddvq_f32(lane);
         }
 
-        for (k = num_f32x4x4 * 16; k < i; k++)
+        for (k = num_f32x4x4 * 16; k < j; k++)
         {
             L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
         }
@@ -68,8 +63,6 @@ float **cholesky_f32(float **L, int n)
 
         for (i = j + 1; i < n; i++)
         {
-            num_f32x4x4 = j / 16;
-
             for (k = 0; k < num_f32x4x4; k++)
             {
                 lane = vdupq_n_f32(0);
@@ -100,7 +93,6 @@ float **cholesky_f32(float **L, int n)
 double **cholesky_f64(double **L, int n)
 {
     int i, j, k, num_f64x2x4;
-    int batchSize = 0;
 
     float64x2_t lane = vdupq_n_f64(0);
     float64x2x4_t q4, p4;

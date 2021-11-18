@@ -27,7 +27,8 @@ with open(fn1, "r") as f:
             if not np.isnan(num):
                 arr1.append(num)
             else:
-                print("Check failed! NaN found in result 1.")
+                msg = "Check failed! NaN found in file 1: " + fn1
+                print(colored(msg, "red"))
                 sys.exit()
 
 # read matrix B
@@ -38,20 +39,24 @@ with open(fn2, "r") as f:
             if not np.isnan(num):
                 arr2.append(num)
             else:
-                print("Check failed! NaN found in result 2.")
+                msg = "Check failed! NaN found in file 2: " + fn2
+                print(colored(msg, "red"))
                 sys.exit()
 
 # Check size
 if len(arr1) != len(arr2):
-    print("Check failed! Length of the output do not match.")
+    print(colored("Check failed! Length of the output do not match.", "red"))
     sys.exit()
 
 # Calculate diff
 diff = np.array(arr1) - np.array(arr2)
 total = np.nansum(diff ** 2)
 percent = total / np.nansum(arr1) * 100
-msg = "[DIFF] " + str(total) + "(" + str(percent) + "%)"
-print(colored(msg, "green"))
+msg = "[DIFF] " + str(total) + " (" + str(percent) + "%)"
+if percent > 0.0005:
+    print(colored(msg, "yellow"))
+else:
+    print(colored(msg, "green"))
 
 
 ######################################################################
