@@ -101,17 +101,19 @@ float **cholesky_f32(float **L, int n)
 double **cholesky_f64(double **L, int n)
 {
     int i, j, k, num_f64x2x4;
+    float ljj = 0;
 
     float64x2_t lane = vdupq_n_f64(0);
     float64x2x4_t q4, p4;
 
     for (j = 0; j < n; j++)
     {
+        num_f64x2x4 = j / 8;
+
         memset(&L[j][j + 1], 0, sizeof(double) * (n - j - 1));
-        i = j;
 
-        num_f64x2x4 = i / 8;
-
+#pragma omp parallel for reduction(+ \
+                                   : ljj) private(q4, p4, lane)
         for (k = 0; k < num_f64x2x4; k++)
         {
             lane = vdupq_n_f64(0);
@@ -120,20 +122,23 @@ double **cholesky_f64(double **L, int n)
             lane = vmlsq_f64(lane, q4.val[1], q4.val[1]);
             lane = vmlsq_f64(lane, q4.val[2], q4.val[2]);
             lane = vmlsq_f64(lane, q4.val[3], q4.val[3]);
-            L[j][j] += vaddvq_f64(lane);
+            ljj += vaddvq_f64(lane);
         }
 
-        for (k = num_f64x2x4 * 8; k < i; k++)
+#pragma omp parallel for reduction(- \
+                                   : ljj)
+        for (k = num_f64x2x4 * 8; k < j; k++)
         {
-            L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
+            ljj -= L[j][k] * L[j][k];
         }
 
+        L[j][j] += ljj;
         L[j][j] = sqrt(L[j][j]);
+        ljj = 0;
 
+#pragma omp parallel for private(q4, p4, lane, k)
         for (i = j + 1; i < n; i++)
         {
-            num_f64x2x4 = j / 8;
-
             for (k = 0; k < num_f64x2x4; k++)
             {
                 lane = vdupq_n_f64(0);
