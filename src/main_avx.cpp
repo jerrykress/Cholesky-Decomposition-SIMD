@@ -40,6 +40,19 @@ inline float hsum_float_avx(__m256 v)
     return _mm_cvtss_f32(_mm_add_ss(vlow, high64)); // reduce to scalar
 }
 
+/** 
+    Horizontal sum reduce of double vector 
+**/
+inline double hsum_double_avx(__m256d v)
+{
+    __m128d vlow = _mm256_castpd256_pd128(v);
+    __m128d vhigh = _mm256_extractf128_pd(v, 1); // high 128
+    vlow = _mm_add_pd(vlow, vhigh);              // reduce down to 128
+
+    __m128d high64 = _mm_unpackhi_pd(vlow, vlow);
+    return _mm_cvtsd_f64(_mm_add_sd(vlow, high64)); // reduce to scalar
+}
+
 /**
     Cholesky Float 32
 **/
@@ -51,8 +64,6 @@ float **cholesky_f32(float **L, int n)
 
     for (j = 0; j < n; j++)
     {
-        // printf(">> j=%d\n", j);
-        ;
         memset(&L[j][j + 1], 0, sizeof(float) * (n - j - 1));
         // printf("$1\n");
         num_f32x8 = j / 8;
@@ -89,6 +100,65 @@ float **cholesky_f32(float **L, int n)
             }
 
             for (k = num_f32x8 * 8; k < j; k++)
+            {
+                L[i][j] = fma(-L[i][k], L[j][k], L[i][j]);
+            }
+
+            L[i][j] /= L[j][j];
+        }
+        // printf("$5\n");
+    }
+
+    return L;
+}
+
+/**
+    Cholesky Float 64
+**/
+double **cholesky_f64(double **L, int n)
+{
+    int i, j, k, num_f64x4;
+
+    __m256d q, p = _mm256_set1_pd(0);
+
+    for (j = 0; j < n; j++)
+    {
+        memset(&L[j][j + 1], 0, sizeof(double) * (n - j - 1));
+        // printf("$1\n");
+        num_f64x4 = j / 4;
+
+        for (k = 0; k < num_f64x4; k++)
+        {
+            // printf("k=%d\n", k);
+            q = _mm256_loadu_pd(&L[j][k * 4]);
+            // printf("$1a\n");
+            q = _mm256_mul_pd(q, q);
+            // printf("$1b\n");
+            L[j][j] -= hsum_double_avx(q);
+            // printf("$1c\n");
+        }
+        // printf("$2\n");
+
+        for (k = num_f64x4 * 4; k < j; k++)
+        {
+            L[j][j] = fma(-L[j][k], L[j][k], L[j][j]);
+        }
+        // printf("$3\n");
+
+        L[j][j] = sqrt(L[j][j]);
+        // printf("$4\n");
+
+        for (i = j + 1; i < n; i++)
+        {
+            for (k = 0; k < num_f64x4; k++)
+            {
+                q = _mm256_loadu_pd(&L[i][k * 4]);
+                p = _mm256_loadu_pd(&L[j][k * 4]);
+                p = _mm256_mul_pd(q, p);
+                L[i][j] -= hsum_double_avx(p);
+            }
+
+            for (k = num_f64x4 * 4; k < j; k++)
             {
                 L[i][j] = fma(-L[i][k], L[j][k], L[i][j]);
             }
@@ -253,18 +323,18 @@ int main(int argc, char **argv)
             writeOuput<float>(matrix_f32, ms_double.count());
             break;
 
-            // case 2:
-            //     // float64
-            //     matrix_f64 = initMatrix<double>(matrix_f64, matrixVec, dim);
-            //     t1 = high_resolution_clock::now();
-            //     matrix_f64 = cholesky_f64(matrix_f64, dim);
-            //     t2 = high_resolution_clock::now();
-            //     ms_double = t2 - t1;
-            //     std::cout
-            //         << "\033[32m[RESULT] <f64> " << ms_double.count() << " ms\033[0m"
-            //         << endl;
-            //     writeOuput<double>(matrix_f64, ms_double.count());
-            //     break;
+        case 2:
+            // float64
+            matrix_f64 = initMatrix<double>(matrix_f64, matrixVec, dim);
+            t1 = high_resolution_clock::now();
+            matrix_f64 = cholesky_f64(matrix_f64, dim);
+            t2 = high_resolution_clock::now();
+            ms_double = t2 - t1;
+            std::cout
+                << "\033[32m[RESULT] <f64> " << ms_double.count() << " ms\033[0m"
+                << endl;
+            writeOuput<double>(matrix_f64, ms_double.count());
+            break;
 
         default:
             break;
