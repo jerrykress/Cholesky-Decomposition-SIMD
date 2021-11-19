@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <unistd.h>
+#include <omp.h>
 
 using namespace std;
 using std::chrono::duration;
