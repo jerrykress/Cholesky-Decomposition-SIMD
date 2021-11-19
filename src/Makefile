@@ -1,21 +1,29 @@
+# silent warnings
 .DEFAULT_GOAL := compile
 .SILENT:test
 
+# color definitions
 CYAN=\033[0;36m
 NC=\033[0m
+GREEN=\033[0;32m
 
+# compiler
 # CC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
 CC = ~/compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
-
+# disassembler
 DCC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-objdump
-
+# available programs
 PROG_SEQ  = main_seq
-# PROG_SIMD = main_neon
-PROG_SIMD = main_omp
-
+PROG_NEON = main_neon
+PROG_OMP  = main_omp
+PROG_AVX  = main_avx
+# [RUN] reference program
+PROG_1 = ${PROG_SEQ}
+# [RUN] benchmark program
+PROG_2 = ${PROG_OMP}
+# name of input and output folders
 IN_PATH = input
 OUT_PATH = output
-
 # default input filename
 TEST_FILE = input_${DIM}x${DIM}.txt
 # compliation results from a testing session
@@ -43,17 +51,21 @@ generate:
     fi
 
 compile:
-	@echo "Compiling sequential code..."
-	${CC} ${PROG_SEQ}.cpp -o ${PROG_SEQ}.elf
-	@echo "Compiling SIMD code..."
-	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_SIMD}.cpp -o ${PROG_SIMD}.elf
+	@echo "${GREEN} Compiling sequential ${NC}"
+	${CC} ${PROG_1}.cpp -o ${PROG_1}.elf
+	@echo "${GREEN} Compiling NEON single core ${NC}"
+	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON}.cpp -o ${PROG_NEON}.elf
+	@echo "${GREEN} Compiling NEON multi core ${NC}"
+	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_OMP}.cpp -o ${PROG_OMP}.elf
+	@echo "${GREEN} Compiling AVX multi core ${NC}"
+	clang++ -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}
 
 run:
 	@mkdir -p ${OUT_PATH}
 	@echo "SEQ @ size=${DIM}"
-	@chmod +x ${PROG_SEQ}.elf && ./${PROG_SEQ}.elf ${IN_PATH}/${TEST_FILE} ${TEST_MODE}
+	@chmod +x ${PROG_1}.elf && ./${PROG_1}.elf ${IN_PATH}/${TEST_FILE} ${TEST_MODE}
 	@echo "SIMD @ size=${DIM}"
-	@chmod +x ${PROG_SIMD}.elf && ./${PROG_SIMD}.elf ${IN_PATH}/${TEST_FILE} ${TEST_MODE}
+	@chmod +x ${PROG_2}.elf && ./${PROG_2}.elf ${IN_PATH}/${TEST_FILE} ${TEST_MODE}
 
 test:
 	@echo "Testing sizes from ${DIM1} up to ${DIM2}"
@@ -74,7 +86,7 @@ graph:
 	@python3 graph.py
 
 inspect:
-	@${DCC} -lSd {PROG_SIMD}.elf > O1.txt 
+	@${DCC} -lSd {PROG_2}.elf > O1.txt 
 
 clean:
 	@echo "Cleaning built binaries and generated input files..."
@@ -82,6 +94,3 @@ clean:
 	@rm *.txt
 	@rm -rf ${IN_PATH}
 	@rm -rf ${OUT_PATH}
-
-exp:
-	${CC} -fopenmp omp_test.cpp -o omp_test.elf
