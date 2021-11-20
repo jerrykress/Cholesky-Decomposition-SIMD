@@ -15,8 +15,9 @@ DCC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64
 # available programs
 PROG_SEQ  = main_seq
 PROG_NEON = main_neon
-PROG_OMP  = main_omp
 PROG_AVX  = main_avx
+PROG_NEON_OMP = main_neon_omp
+PROG_AVX_OMP  = main_avx_omp
 # [RUN] reference program
 PROG_1 = ${PROG_SEQ}
 # [RUN] benchmark program
@@ -56,9 +57,11 @@ compile:
 	@echo "${GREEN} Compiling NEON single core ${NC}"
 	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON}.cpp -o ${PROG_NEON}.elf
 	@echo "${GREEN} Compiling NEON multi core ${NC}"
-	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_OMP}.cpp -o ${PROG_OMP}.elf
+	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON_OMP}.cpp -o ${PROG_NEON_OMP}.elf
 	@echo "${GREEN} Compiling AVX single core ${NC}"
 	g++ -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}.elf
+	@echo "${GREEN} Compiling AVX multi core ${NC}"
+	g++ -mavx -fopenmp ${PROG_AVX_OMP}.cpp -o ${PROG_AVX_OMP}.elf
 
 run:
 	@mkdir -p ${OUT_PATH}

@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <assert.h>
 #include <iostream>
+#include <immintrin.h> // AVX
 #include <iomanip>
 #include <chrono>
 #include <stdint.h>
 #include <bits/stdc++.h>
-#include <arm_neon.h>
 #include <math.h>
 #include <fstream>
 #include <string>
@@ -28,63 +28,80 @@ double **matrix_f64;
 // Dimension
 int dim;
 
+/** 
+    Horizontal sum reduce of 32x8 float vector 
+**/
+static inline float hsum_float_avx(__m256 x)
+{
+    /* ( x3+x7, x2+x6, x1+x5, x0+x4 ) */
+    const __m128 x128 = _mm_add_ps(_mm256_extractf128_ps(x, 1), _mm256_castps256_ps128(x));
+    /* ( -, -, x1+x3+x5+x7, x0+x2+x4+x6 ) */
+    const __m128 x64 = _mm_add_ps(x128, _mm_movehl_ps(x128, x128));
+    /* ( -, -, -, x0+x1+x2+x3+x4+x5+x6+x7 ) */
+    const __m128 x32 = _mm_add_ss(x64, _mm_shuffle_ps(x64, x64, 0x55));
+    return _mm_cvtss_f32(x32);
+}
+
+/** 
+    Horizontal sum reduce of 64x4 double vector 
+**/
+static inline double hsum_double_avx(__m256d v)
+{
+    __m128d vlow = _mm256_castpd256_pd128(v);
+    __m128d vhigh = _mm256_extractf128_pd(v, 1); // high 128
+    vlow = _mm_add_pd(vlow, vhigh);              // reduce down to 128
+    __m128d high64 = _mm_unpackhi_pd(vlow, vlow);
+    return _mm_cvtsd_f64(_mm_add_sd(vlow, high64)); // reduce to scalar
+}
+
 /**
     Cholesky Float 32
 **/
 float **cholesky_f32(float **L, int n)
 {
-    int i, j, k, num_f32x4x4;
-    float ljj = 0;
+    int i, j, k, num_f32x8;
+    double ljj = 0; // accum
 
-    float32x4_t lane = vdupq_n_f32(0);
-    float32x4x4_t q4, p4;
+    __m256 q, p = _mm256_set1_ps(0);
 
     for (j = 0; j < n; j++)
     {
-        num_f32x4x4 = j / 16;
+        num_f32x8 = j / 8;
 
         memset(&L[j][j + 1], 0, sizeof(float) * (n - j - 1));
 
 #pragma omp parallel for reduction(+ \
-                                   : ljj) private(q4, p4, lane)
-        for (k = 0; k < num_f32x4x4; k++)
+                                   : ljj) private(q)
+        for (k = 0; k < num_f32x8; k++)
         {
-            lane = vdupq_n_f32(0);
-            q4 = vld4q_f32(&L[j][k * 16]);
-            lane = vmlsq_f32(lane, q4.val[0], q4.val[0]);
-            lane = vmlsq_f32(lane, q4.val[1], q4.val[1]);
-            lane = vmlsq_f32(lane, q4.val[2], q4.val[2]);
-            lane = vmlsq_f32(lane, q4.val[3], q4.val[3]);
-            ljj += vaddvq_f32(lane);
+            q = _mm256_loadu_ps(&L[j][k * 8]);
+            q = _mm256_mul_ps(q, q);
+            ljj += hsum_float_avx(q);
         }
 
-#pragma omp parallel for reduction(- \
+#pragma omp parallel for reduction(+ \
                                    : ljj)
-        for (k = num_f32x4x4 * 16; k < j; k++)
+        for (k = num_f32x8 * 8; k < j; k++)
         {
-            ljj -= L[j][k] * L[j][k];
+            ljj += L[j][k] * L[j][k];
         }
 
-        L[j][j] += ljj;
+        L[j][j] -= ljj;
         L[j][j] = sqrt(L[j][j]);
         ljj = 0;
 
-#pragma omp parallel for private(q4, p4, lane, k)
+#pragma omp parallel for private(q, p, k)
         for (i = j + 1; i < n; i++)
         {
-            for (k = 0; k < num_f32x4x4; k++)
+            for (k = 0; k < num_f32x8; k++)
             {
-                lane = vdupq_n_f32(0);
-                q4 = vld4q_f32(&L[i][k * 16]);
-                p4 = vld4q_f32(&L[j][k * 16]);
-                lane = vmlsq_f32(lane, q4.val[0], p4.val[0]);
-                lane = vmlsq_f32(lane, q4.val[1], p4.val[1]);
-                lane = vmlsq_f32(lane, q4.val[2], p4.val[2]);
-                lane = vmlsq_f32(lane, q4.val[3], p4.val[3]);
-                L[i][j] += vaddvq_f32(lane);
+                q = _mm256_loadu_ps(&L[i][k * 8]);
+                p = _mm256_loadu_ps(&L[j][k * 8]);
+                p = _mm256_mul_ps(q, p);
+                L[i][j] -= hsum_float_avx(p);
             }
 
-            for (k = num_f32x4x4 * 16; k < j; k++)
+            for (k = num_f32x8 * 8; k < j; k++)
             {
                 L[i][j] = fma(-L[i][k], L[j][k], L[i][j]);
             }
@@ -101,58 +118,49 @@ float **cholesky_f32(float **L, int n)
 **/
 double **cholesky_f64(double **L, int n)
 {
-    int i, j, k, num_f64x2x4;
-    float ljj = 0;
+    int i, j, k, num_f64x4;
+    double ljj = 0; // accum
 
-    float64x2_t lane = vdupq_n_f64(0);
-    float64x2x4_t q4, p4;
+    __m256d q, p = _mm256_set1_pd(0);
 
     for (j = 0; j < n; j++)
     {
-        num_f64x2x4 = j / 8;
+        num_f64x4 = j / 4;
 
         memset(&L[j][j + 1], 0, sizeof(double) * (n - j - 1));
 
 #pragma omp parallel for reduction(+ \
-                                   : ljj) private(q4, p4, lane)
-        for (k = 0; k < num_f64x2x4; k++)
+                                   : ljj) private(q)
+        for (k = 0; k < num_f64x4; k++)
         {
-            lane = vdupq_n_f64(0);
-            q4 = vld4q_f64(&L[j][k * 8]);
-            lane = vmlsq_f64(lane, q4.val[0], q4.val[0]);
-            lane = vmlsq_f64(lane, q4.val[1], q4.val[1]);
-            lane = vmlsq_f64(lane, q4.val[2], q4.val[2]);
-            lane = vmlsq_f64(lane, q4.val[3], q4.val[3]);
-            ljj += vaddvq_f64(lane);
+            q = _mm256_loadu_pd(&L[j][k * 4]);
+            q = _mm256_mul_pd(q, q);
+            ljj += hsum_double_avx(q);
         }
 
-#pragma omp parallel for reduction(- \
+#pragma omp parallel for reduction(+ \
                                    : ljj)
-        for (k = num_f64x2x4 * 8; k < j; k++)
+        for (k = num_f64x4 * 4; k < j; k++)
         {
-            ljj -= L[j][k] * L[j][k];
+            ljj += L[j][k] * L[j][k];
         }
 
-        L[j][j] += ljj;
+        L[j][j] -= ljj;
         L[j][j] = sqrt(L[j][j]);
         ljj = 0;
 
-#pragma omp parallel for private(q4, p4, lane, k)
+#pragma omp parallel for private(q, p, k)
         for (i = j + 1; i < n; i++)
         {
-            for (k = 0; k < num_f64x2x4; k++)
+            for (k = 0; k < num_f64x4; k++)
             {
-                lane = vdupq_n_f64(0);
-                q4 = vld4q_f64(&L[i][k * 8]);
-                p4 = vld4q_f64(&L[j][k * 8]);
-                lane = vmlsq_f64(lane, q4.val[0], p4.val[0]);
-                lane = vmlsq_f64(lane, q4.val[1], p4.val[1]);
-                lane = vmlsq_f64(lane, q4.val[2], p4.val[2]);
-                lane = vmlsq_f64(lane, q4.val[3], p4.val[3]);
-                L[i][j] += vaddvq_f64(lane);
+                q = _mm256_loadu_pd(&L[i][k * 4]);
+                p = _mm256_loadu_pd(&L[j][k * 4]);
+                p = _mm256_mul_pd(q, p);
+                L[i][j] -= hsum_double_avx(p);
             }
 
-            for (k = num_f64x2x4 * 8; k < j; k++)
+            for (k = num_f64x4 * 4; k < j; k++)
             {
                 L[i][j] = fma(-L[i][k], L[j][k], L[i][j]);
             }
