@@ -51,14 +51,14 @@ generate:
     fi
 
 compile:
-	# @echo "${GREEN} Compiling sequential ${NC}"
-	# ${CC} ${PROG_1}.cpp -o ${PROG_1}.elf
-	# @echo "${GREEN} Compiling NEON single core ${NC}"
-	# ${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON}.cpp -o ${PROG_NEON}.elf
-	# @echo "${GREEN} Compiling NEON multi core ${NC}"
-	# ${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_OMP}.cpp -o ${PROG_OMP}.elf
+	@echo "${GREEN} Compiling sequential ${NC}"
+	${CC} ${PROG_1}.cpp -o ${PROG_1}.elf
+	@echo "${GREEN} Compiling NEON single core ${NC}"
+	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON}.cpp -o ${PROG_NEON}.elf
+	@echo "${GREEN} Compiling NEON multi core ${NC}"
+	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_OMP}.cpp -o ${PROG_OMP}.elf
 	@echo "${GREEN} Compiling AVX single core ${NC}"
-	g++ -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}
+	g++ -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}.elf
 
 run:
 	@mkdir -p ${OUT_PATH}

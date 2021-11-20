@@ -5,7 +5,6 @@
 #include <chrono>
 #include <stdint.h>
 #include <bits/stdc++.h>
-#include <arm_neon.h>
 #include <math.h>
 #include <fstream>
 #include <string>
