@@ -21,7 +21,7 @@ PROG_AVX_OMP  = main_avx_omp
 # [RUN] reference program
 PROG_1 = ${PROG_SEQ}
 # [RUN] benchmark program
-PROG_2 = ${PROG_AVX}
+PROG_2 = ${PROG_NEON_OMP}
 # name of input and output folders
 IN_PATH = input
 OUT_PATH = output
@@ -74,7 +74,7 @@ test:
 	@echo "Testing sizes from ${DIM1} up to ${DIM2}"
 	@touch *
 	@if [ ${KEEP_HISTORY} = 0 ]; then\
-        rm -rf ${IN_PATH}; rm -rf ${OUT_PATH}; rm -f ${RESULT_FILE};\
+        rm -rf ${OUT_PATH}; rm -f ${RESULT_FILE};\
     fi
 	@i=${DIM1}; while [ "$$i" -le ${DIM2} ]; do \
 		clear; echo "${CYAN}Testing $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i GENERATE_NEW=${GENERATE_NEW}; make -s run DIM=$$i; make -s check DIM=$$i; i=$$((i * ${STEP}));\
@@ -88,12 +88,13 @@ check:
 graph:
 	@python3 graph.py
 
-inspect:
-	@${DCC} -lSd {PROG_2}.elf > O1.txt 
+extract:
+	@echo "${GREEN} Extracting sample inputs... ${NC}"
+	tar -xzvf input.tar.gz
 
 clean:
-	@echo "Cleaning built binaries and generated input files..."
-	@rm *.elf
-	@rm *.txt
+	@echo "Cleaning up everything..."
+	@find ./ -maxdepth 1 -type f -name "*.elf" -delete 
+	@find ./ -maxdepth 1 -type f -name "*.txt" -delete 
 	@rm -rf ${IN_PATH}
 	@rm -rf ${OUT_PATH}
