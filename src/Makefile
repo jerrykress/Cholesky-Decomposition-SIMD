@@ -22,7 +22,7 @@ PROG_AVX_OMP  = main_avx_omp
 # [RUN] reference program
 PROG_1 = ${PROG_SEQ}
 # [RUN] benchmark program
-PROG_2 = ${PROG_NEON}
+PROG_2 = ${PROG_NEON_OMP}
 # name of input and output folders
 IN_PATH = input
 OUT_PATH = output

@@ -33,7 +33,8 @@
 *.elf
 
 # Cached Output
-*.txt
+input/
+output/
 
 # Compiler
 compiler/
