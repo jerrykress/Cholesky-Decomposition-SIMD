@@ -10,6 +10,7 @@ GREEN=\033[0;32m
 # compiler
 # CC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
 CC = ~/compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
+# CC_VEC_FLAG = -O3
 # disassembler
 DCC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-objdump
 # available programs
@@ -21,7 +22,7 @@ PROG_AVX_OMP  = main_avx_omp
 # [RUN] reference program
 PROG_1 = ${PROG_SEQ}
 # [RUN] benchmark program
-PROG_2 = ${PROG_NEON_OMP}
+PROG_2 = ${PROG_NEON}
 # name of input and output folders
 IN_PATH = input
 OUT_PATH = output
@@ -33,7 +34,7 @@ RESULT_FILE = test_results.txt
 DIM1 ?= 32
 DIM2 ?= 1024
 # step increment during testing (default 1)
-STEP ?= 2
+STEP ?= 8
 # keep old input and output files from the last test (in case of testing failure, this servres as a checkpoint resume)
 KEEP_HISTORY ?= 0
 # generate new input files when testing, default true (turn off when inputs are preloaded, in case old input files from last test are still available)
@@ -51,17 +52,23 @@ generate:
     	echo "Attempting preloaded input. No new file generated";\
     fi
 
+generate_batch:
+	@echo "Generating batch input size ${DIM1} to ${DIM2}"
+	@i=${DIM1}; while [ "$$i" -le ${DIM2} ]; do \
+		clear; echo "${CYAN}Generating $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i; i=$$((i + ${STEP}));\
+  	done
+
 compile:
 	@echo "${GREEN} Compiling sequential ${NC}"
-	${CC} ${PROG_1}.cpp -o ${PROG_1}.elf
+	${CC} ${CC_VEC_FLAG} ${PROG_1}.cpp -o ${PROG_1}.elf
 	@echo "${GREEN} Compiling NEON single core ${NC}"
-	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON}.cpp -o ${PROG_NEON}.elf
+	${CC} ${CC_VEC_FLAG} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON}.cpp -o ${PROG_NEON}.elf
 	@echo "${GREEN} Compiling NEON multi core ${NC}"
-	${CC} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON_OMP}.cpp -o ${PROG_NEON_OMP}.elf
+	${CC} ${CC_VEC_FLAG} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON_OMP}.cpp -o ${PROG_NEON_OMP}.elf
 	@echo "${GREEN} Compiling AVX single core ${NC}"
-	g++ -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}.elf
+	g++ ${CC_VEC_FLAG} -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}.elf
 	@echo "${GREEN} Compiling AVX multi core ${NC}"
-	g++ -mavx -fopenmp ${PROG_AVX_OMP}.cpp -o ${PROG_AVX_OMP}.elf
+	g++ ${CC_VEC_FLAG} -mavx -fopenmp ${PROG_AVX_OMP}.cpp -o ${PROG_AVX_OMP}.elf
 
 run:
 	@mkdir -p ${OUT_PATH}
@@ -77,9 +84,11 @@ test:
         rm -rf ${OUT_PATH}; rm -f ${RESULT_FILE};\
     fi
 	@i=${DIM1}; while [ "$$i" -le ${DIM2} ]; do \
-		clear; echo "${CYAN}Testing $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i GENERATE_NEW=${GENERATE_NEW}; make -s run DIM=$$i; make -s check DIM=$$i; i=$$((i * ${STEP}));\
+		clear; echo "${CYAN}Testing $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i GENERATE_NEW=${GENERATE_NEW}; make -s run DIM=$$i; make -s check DIM=$$i; i=$$((i + ${STEP}));\
   	done
 	@make -s graph
+	@mv test_result.png ${DIM1}-${DIM2}-${STEP}.png
+	@mv test_results.txt ${DIM1}-${DIM2}-${STEP}.txt
 
 check:
 	@echo "Compare output..."
