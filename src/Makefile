@@ -92,7 +92,7 @@ test:
 
 check:
 	@echo "Compare output..."
-	@python3 check_result.py ${DIM} ${OUT_PATH}/main_seq_out_${DIM}.txt ${OUT_PATH}/main_neon_out_${DIM}.txt ${OUT_PATH}/main_seq_perf_${DIM}.txt ${OUT_PATH}/main_neon_perf_${DIM}.txt
+	@python3 check_result.py ${DIM} ${OUT_PATH}/main_seq_out_${DIM}.txt ${OUT_PATH}/main_simd_out_${DIM}.txt ${OUT_PATH}/main_seq_perf_${DIM}.txt ${OUT_PATH}/main_simd_perf_${DIM}.txt
 
 graph:
 	@python3 graph.py
