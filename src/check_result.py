@@ -29,6 +29,7 @@ with open(fn1, "r") as f:
             else:
                 msg = "Warning! NaN found in file 1: " + fn1
                 print(colored(msg, "red"))
+                arr1.append(num)
                 # sys.exit()
 
 # read matrix B

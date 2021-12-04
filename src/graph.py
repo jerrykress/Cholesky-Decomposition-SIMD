@@ -1,13 +1,20 @@
 from numpy import promote_types
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 from termcolor import colored
 
-filename = "test_result.png"
+fn = "test_result"
+
+args = sys.argv
+if len(args) == 2:
+    fn = args[1]
+
+filename = fn + ".png"
 
 data = pd.read_csv("test_results.txt", sep=" ", header=None)
-data.columns = ["Input Size", "Sum Error", "Percentage", "Seq Time", "Neon Time"]
-data["Speed Up"] = data["Seq Time"] / data["Neon Time"]
+data.columns = ["Input Size", "Sum Error", "Percentage", "Seq Time", "SIMD Time"]
+data["Speed Up"] = data["Seq Time"] / data["SIMD Time"]
 data["Increment"] = (
     data["Speed Up"] - data.shift(periods=1, axis="index", fill_value=0)["Speed Up"]
 )
@@ -23,7 +30,7 @@ data.plot(ax=axes[0, 0], x="Input Size", y="Percentage", kind="line")
 ################ plot 2 ####################
 axes[0, 1].title.set_text("Execution Time")
 axes[0, 1].set_ylabel("ms")
-data.plot(ax=axes[0, 1], x="Input Size", y=["Seq Time", "Neon Time"], kind="line")
+data.plot(ax=axes[0, 1], x="Input Size", y=["Seq Time", "SIMD Time"], kind="line")
 
 ################ plot 3 ####################
 axes[1, 0].title.set_text("Speed Up Factor")
@@ -42,3 +49,11 @@ print(colored(msg, "blue"))
 
 avg_percent = data["Percentage"].mean()
 print("Average error percentage: ", avg_percent)
+seq_time = data["Seq Time"].sum()
+print("Total seq time: ", seq_time)
+simd_time = data["SIMD Time"].sum()
+print("Total simd time: ", simd_time)
+avg_speedup = data["Speed Up"].mean()
+print("Average Speed Up: ", avg_speedup)
+max_speedup = data["Speed Up"].max()
+print("Max Speed Up: ", max_speedup)

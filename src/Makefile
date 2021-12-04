@@ -22,7 +22,7 @@ PROG_AVX_OMP  = main_avx_omp
 # [RUN] reference program
 PROG_1 = ${PROG_SEQ}
 # [RUN] benchmark program
-PROG_2 = ${PROG_AVX}
+PROG_2 = ${PROG_AVX_OMP}
 # name of input and output folders
 IN_PATH = input
 OUT_PATH = output
@@ -66,9 +66,9 @@ compile:
 	@echo "${GREEN} Compiling NEON multi core ${NC}"
 	${CC} ${CC_VEC_FLAG} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON_OMP}.cpp -o ${PROG_NEON_OMP}.elf
 	@echo "${GREEN} Compiling AVX single core ${NC}"
-	g++ ${CC_VEC_FLAG} -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}.elf
+	g++ ${CC_VEC_FLAG} -march=znver2 -mtune=znver2 -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}.elf
 	@echo "${GREEN} Compiling AVX multi core ${NC}"
-	g++ ${CC_VEC_FLAG} -mavx -fopenmp ${PROG_AVX_OMP}.cpp -o ${PROG_AVX_OMP}.elf
+	g++ ${CC_VEC_FLAG} -march=znver2 -mtune=znver2 -mavx -fopenmp ${PROG_AVX_OMP}.cpp -o ${PROG_AVX_OMP}.elf
 
 run:
 	@mkdir -p ${OUT_PATH}
