@@ -1,39 +1,118 @@
-# MSc-Project-2021
+# Cholesky Decomposition on SIMD
 
-This project implements Cholesky Decomposition in C++ on Arm Neon SIMD platforms. The purpose is to compare the differences in performance and power consumption in order to demonstrate the benefits and drawbacks of using SIMD on matrices of various sizes.
+This project implements Cholesky Decomposition in C++ using Arm Neon, Intel AVX-256 intrinsics and OpenMP.
+The purpose is to evaluate the advantage of running the algorithm on SIMD platforms and compare the differences in performance between architectures.
 
-## Compiler
+## Pre-Install Configuration
 
-> gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu
+Clone and repo. Navigate to the **src** directory. Before installing the program, specify the target platform in the Makefile option below. This will change how the sequential reference code is compiled.
 
-Get in terminal
+```bash
+# running on AArch64 architecture
+TARGET_ARCH = aarch64
 
-> `wget https://developer.arm.com/-/media/Files/downloads/gnu-a/10.3-2021.07/binrel/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz`
+# running on x86 architecture
+TARGET_ARCH = x86_64
+```
 
-_Or download newer versions from_ [Arm developer website](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads)
+## Installation
 
-Extract using
+After the target has been specified, run the following command. This will download and install the default compiler then build all the binaries.
 
-> ` tar -Jxf gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz`
+```bash
+make install
+```
 
-## How to use
+---
 
-Compile all versions of binaries
+## Pre-Testing Configuration
 
-> `make`
+Before conducting any test, modify the benchmark program to be tested. **Reference program should always be set to sequential**. Do not pass these in as command line parameters.
 
-Generate a random input file
+```bash
+# available programs
+PROG_SEQ  = main_seq
+PROG_NEON = main_neon
+PROG_AVX  = main_avx
+PROG_NEON_OMP = main_neon_omp
+PROG_AVX_OMP  = main_avx_omp
+# reference program
+PROG_1 = ${PROG_SEQ}
+# benchmark program
+PROG_2 = ${PROG_AVX_OMP}
+```
 
-> `make generate DIM=<SIZE>`
+## Automatic Testing
 
-Run program for a matrix size
+Once the desired configuration is completed, run the following command to start automatic ranged testing. This will automatically generate the required input files, run both sequential and the chosen benchmark programs at each size in the specified range, collect the results and produce a graph.
 
-> `make run DIM=<SIZE>`
+Some testing options are available in the section below.
 
-Compare the output from NEON against squential
+```bash
+make test DIM1=<start> DIM2=<end> [Options]
+```
 
-> `make check <FILE_1> <FILE_2>`
+## Manual Testing
 
-Run an automatic test on a range of sizes and generate a report file
+```bash
+# extract pre-generated input files
+make extract
 
-> `make test DIM1=<RANGE_BEGIN> DIM2=<RANGE_END>`
+# generate a single input file
+make generate DIM=<size>
+
+# generate a batch of input files
+make generate_batch DIM1=<start> DIM2=<end> STEP=<interval>
+
+# run a single test on a specific size
+make run DIM=<size>
+
+# invoke evaluation of test result
+make check DIM=<size>
+
+# generate graph from test_results.txt
+make graph
+
+# delete all input, output files and built binaries
+make clean
+```
+
+---
+
+## Options
+
+```bash
+# specify using single or double floating point precision.
+# PRECISION=1: use 32-bit precision in all programs
+# PRECISION=2: use 64-bit precision in all programs
+# default: 1
+PRECISION=1
+
+# generate new random input files in automatic testing
+# GENERATE_NEW=0: use previous generated files
+# GENERATE_NEW=1: generate new every time
+# default: 1
+GENERATE_NEW=1
+
+# keep output and result files from a previous test. This is useful when performing tests in segments.
+# KEEP_HISTORY=0: delete previous output before testing
+# KEEP_HISTORY=1: keep previous output before testing
+# default: 0
+KEEP_HISTORY=0
+
+# GCC compiler flag
+# This is not used by default. However you could pass in gcc options such as vectorisation flag through this option.
+CC_VEC_FLAG=[gcc-options]
+```
+
+## Uninstall
+
+Uninstall compiler and perform a clean, leaving only the original source code.
+
+```bash
+make uninstall
+```
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
