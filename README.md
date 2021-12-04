@@ -5,7 +5,7 @@ The purpose is to evaluate the advantage of running the algorithm on SIMD platfo
 
 ## Pre-Install Configuration
 
-Clone and repo. Navigate to the **src** directory. Before installing the program, specify the target platform in the Makefile option below. This will change how the sequential reference code is compiled.
+Clone and repo. Navigate to the **src** directory. Before installing the program, specify the target platform in the Makefile option below. This will change how the sequential reference code is compiled. Do not pass this in as command line parameter.
 
 ```bash
 # running on AArch64 architecture
@@ -38,7 +38,7 @@ PROG_NEON_OMP = main_neon_omp
 PROG_AVX_OMP  = main_avx_omp
 # reference program
 PROG_1 = ${PROG_SEQ}
-# benchmark program
+# benchmark program (change this)
 PROG_2 = ${PROG_AVX_OMP}
 ```
 
@@ -50,6 +50,12 @@ Some testing options are available in the section below.
 
 ```bash
 make test DIM1=<start> DIM2=<end> [Options]
+```
+
+For example to run a test from 64 to 1024 with an interval of 16 using double precision floats, type the following command.
+
+```bash
+make test DIM1=64 DIM2=1024 STEP=16 PRECISION=2
 ```
 
 ## Manual Testing
