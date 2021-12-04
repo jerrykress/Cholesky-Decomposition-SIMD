@@ -8,8 +8,9 @@ NC=\033[0m
 GREEN=\033[0;32m
 
 # compiler
-# CC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
-CC = ~/compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
+CC = ../compiler/bin/aarch64-none-linux-gnu-g++
+# CC = ~/compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++
+# compiler flags
 # CC_VEC_FLAG = -O3
 # disassembler
 DCC = ../compiler/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-objdump
@@ -43,6 +44,25 @@ GENERATE_NEW ?= 1
 # 1 - float32, 2 - float64
 TEST_MODE ?= 1
 
+install:
+	@echo "${GREEN} Installing compiler... ${NC}"
+	wget https://developer.arm.com/-/media/Files/downloads/gnu-a/10.3-2021.07/binrel/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+	tar -Jxf gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+	rm gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+	mv gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu ../compiler/
+
+compile:
+	@echo "${GREEN} Compiling sequential ${NC}"
+	${CC} ${CC_VEC_FLAG} ${PROG_1}.cpp -o ${PROG_1}.elf
+	@echo "${GREEN} Compiling NEON single core ${NC}"
+	${CC} ${CC_VEC_FLAG} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON}.cpp -o ${PROG_NEON}.elf
+	@echo "${GREEN} Compiling NEON multi core ${NC}"
+	${CC} ${CC_VEC_FLAG} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON_OMP}.cpp -o ${PROG_NEON_OMP}.elf
+	@echo "${GREEN} Compiling AVX single core ${NC}"
+	g++ ${CC_VEC_FLAG} -march=znver2 -mtune=znver2 -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}.elf
+	@echo "${GREEN} Compiling AVX multi core ${NC}"
+	g++ ${CC_VEC_FLAG} -march=znver2 -mtune=znver2 -mavx -fopenmp ${PROG_AVX_OMP}.cpp -o ${PROG_AVX_OMP}.elf
+
 generate:
 	@echo "Generating random input size ${DIM}"
 	@if [ ${GENERATE_NEW} = 1 ]; then\
@@ -57,18 +77,6 @@ generate_batch:
 	@i=${DIM1}; while [ "$$i" -le ${DIM2} ]; do \
 		clear; echo "${CYAN}Generating $$i / ${DIM2} ${NC}"; make -s generate DIM=$$i; i=$$((i + ${STEP}));\
   	done
-
-compile:
-	@echo "${GREEN} Compiling sequential ${NC}"
-	${CC} ${CC_VEC_FLAG} ${PROG_1}.cpp -o ${PROG_1}.elf
-	@echo "${GREEN} Compiling NEON single core ${NC}"
-	${CC} ${CC_VEC_FLAG} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON}.cpp -o ${PROG_NEON}.elf
-	@echo "${GREEN} Compiling NEON multi core ${NC}"
-	${CC} ${CC_VEC_FLAG} -fopenmp -march=armv8-a+simd -mcpu=cortex-a72 -mtune=cortex-a72 ${PROG_NEON_OMP}.cpp -o ${PROG_NEON_OMP}.elf
-	@echo "${GREEN} Compiling AVX single core ${NC}"
-	g++ ${CC_VEC_FLAG} -march=znver2 -mtune=znver2 -mavx ${PROG_AVX}.cpp -o ${PROG_AVX}.elf
-	@echo "${GREEN} Compiling AVX multi core ${NC}"
-	g++ ${CC_VEC_FLAG} -march=znver2 -mtune=znver2 -mavx -fopenmp ${PROG_AVX_OMP}.cpp -o ${PROG_AVX_OMP}.elf
 
 run:
 	@mkdir -p ${OUT_PATH}
@@ -100,6 +108,11 @@ graph:
 extract:
 	@echo "${GREEN} Extracting sample inputs... ${NC}"
 	tar -xzvf input.tar.gz
+
+uninstall:
+	@echo "Deleting compiler and cleaning up everything..."
+	rm -rf ../compiler
+	make clean
 
 clean:
 	@echo "Cleaning up everything..."
