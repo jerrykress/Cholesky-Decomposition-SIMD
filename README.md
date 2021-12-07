@@ -125,6 +125,15 @@ Uninstall compiler and perform a clean, leaving only the original source code.
 make uninstall
 ```
 
+## Recommended Content
+[Neon Intrinsics References](https://developer.arm.com/architectures/instruction-sets/intrinsics/)
+
+[Intel Intrinsics Guide](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#ig_expand=6093,14,3171,3159,3144,4341,3814,2174,2174,4914,4242,4317,6138,6127&text=mm256_)
+
+[Arm GNU Toolchain for the A-profile Architecture](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads)
+
+[Arm GNU Compiler Options](https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html)
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
