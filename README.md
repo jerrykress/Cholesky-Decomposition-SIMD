@@ -89,6 +89,11 @@ make clean
 ## Options
 
 ```bash
+# specify the size of intervals in a ranged automatic testing
+# the value should be equal or greater than 1
+# default: 1
+STEP=1
+
 # specify using single or double floating point precision.
 # PRECISION=1: use 32-bit precision in all programs
 # PRECISION=2: use 64-bit precision in all programs
