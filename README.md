@@ -6,7 +6,7 @@ The purpose is to evaluate the advantage of running the algorithm on SIMD platfo
 
 ## Pre-Install Configuration
 
-Clone and repo. Navigate to the **src** directory. Before installing the program, specify the target platform in the Makefile option below. This will change how the sequential reference code is compiled. Do not pass this in as command line parameter.
+Clone the repo. Navigate to the **src** directory. Before installing the program, specify the target platform in the Makefile option below. This will change how the sequential reference code is compiled. Do not pass this in as command line parameter.
 
 ```bash
 # running on AArch64 architecture
