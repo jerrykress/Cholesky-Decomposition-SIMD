@@ -2,6 +2,7 @@
 
 This project implements Cholesky Decomposition in C++ using Arm Neon, Intel AVX-256 intrinsics and OpenMP.
 The purpose is to evaluate the advantage of running the algorithm on SIMD platforms and compare the differences in performance between architectures.
+(This repo is part of a MSc thesis at University of Glasgow)
 
 ## Pre-Install Configuration
 
